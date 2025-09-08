@@ -31,7 +31,7 @@ if __name__ == '__main__':
             
         df_dakota_output, number_null_sim = rm.remove_null_simulations(df_dakota_output, "simulations.csv")
 
-        # Aggiunta nuove colonne
+        # Aggiunta di nuove colonne
 
         # Total crystal content
         df_dakota_output["response_fn_16"] = df_dakota_output["response_fn_7"] + df_dakota_output["response_fn_8"] + df_dakota_output["response_fn_9"]
@@ -40,7 +40,7 @@ if __name__ == '__main__':
         # Undercooling
         df_dakota_output["response_fn_17"] = plag_liquidus - df_dakota_output["response_fn_6"] 
 
-        df_dakota_output["response_fn_18"] = df_dakota_output["response_fn_14"]
+        df_dakota_output["response_fn_18"] = df_dakota_output["response_fn_14"] # EB : da eliminare successivamente
 
         df_dakota_output["response_fn_19"] = np.where(
             df_dakota_output["response_fn_15"] > -0.5,
@@ -48,10 +48,59 @@ if __name__ == '__main__':
             (df_dakota_output["response_fn_4"] ** 2.0) / (2.0 * 9.8)
         )
 
-        # Salvataggio
-        df_dakota_output.to_csv(filename, index=False)
-        print(f"Simulazioni salvate in {filename} ({len(df_dakota_output)} righe).")
+        # Aggiungiamo una seconda riga al sile per avere delle labels leggibili
+        
+        # Trova tutte le colonne che iniziano con 'x'
+        xi_cols = [col for col in df_dakota_output.columns if col.startswith('x')]
+        n_xi = len(xi_cols)
+        print(f"Trovate {n_xi} variabili xi: {xi_cols}")
 
+        # Converti dinamicamente in array numpy
+        xi_arrays = {col: df_dakota_output[col].to_numpy() for col in xi_cols}
+
+        xi_labels, xi_transforms, input_Min, input_Max = utils.get_xi_labels_from_template(df_dakota_output, "conduit_solver.template")
+        #print(xi_labels)
+
+        response_labels = {
+            'response_fn_1': 'Total Gas volume fraction',
+            'response_fn_2': 'Pressure 1 [Pa]',
+            'response_fn_3': 'Pressure 2 [Pa]',
+            'response_fn_4': 'Liquid/particles velocity [m/s]',
+            'response_fn_5': 'Gas velocity [m/s]',
+            'response_fn_6': 'Exit temperature [K]',
+            'response_fn_7': 'Plagioclase crystallinity [-]',
+            'response_fn_8': 'Pyroxene crystallinity [-]',
+            'response_fn_9': 'Olivine crystallinity [-]',
+            'response_fn_10': 'Mach number ',
+            'response_fn_11': 'Exit mixture velocity [m/s]',
+            'response_fn_12': 'Mass flow rate [kg/s]',
+            'response_fn_13': 'Volume flow rate [m3/s]',
+            'response_fn_14': 'Fragmentation Code',
+            'response_fn_15': 'Fragmentation depth [m]',
+            "response_fn_16": "Total crystal content [vol.%]",
+            "response_fn_17": "Undercooling relative to plag [K]",
+            "response_fn_18": "Viscosity at fragmentation [Pa·s]",
+            "response_fn_19": "Fragmentation length scale [m]",
+        }
+
+        # Costruisci seconda riga di etichette
+        labels_row = []
+        for col in df_dakota_output.columns:
+            if col in xi_labels:
+                labels_row.append(xi_labels[col])
+            elif col in response_labels:
+                labels_row.append(response_labels[col])
+            else:
+                labels_row.append(col)
+
+        # Salva con doppia intestazione
+        filename_with_labels = "simulations.csv"
+        with open(filename_with_labels, "w") as f:
+            f.write(",".join(df_dakota_output.columns) + "\n")
+            f.write(",".join(labels_row) + "\n")
+            df_dakota_output.to_csv(f, index=False, header=False)
+        
+        print(f"Simulazioni salvate in {filename_with_labels} ({len(df_dakota_output)} righe).")
 
     # data_at_fragmentation.csv
     df_fragmentation = utils.load_or_process_csv(
@@ -63,6 +112,8 @@ if __name__ == '__main__':
         dependencies=["simulations.csv"]
     )
     # EB : aggiungere la response_fn_28
+
+    input('AAA...')
 
     # data_at_inlet.csv
     df_inlet = utils.load_or_process_csv(
@@ -104,18 +155,6 @@ if __name__ == '__main__':
 
     # Numero di step per il campionamento
     num_step_campionamento = 3
-
-    # Trova tutte le colonne che iniziano con 'x'
-    xi_cols = [col for col in df_dakota_output.columns if col.startswith('x')]
-    n_xi = len(xi_cols)
-    print(f"Trovate {n_xi} variabili xi: {xi_cols}")
-
-    # Converti dinamicamente in array numpy
-    xi_arrays = {col: df_dakota_output[col].to_numpy() for col in xi_cols}
-
-    xi_labels, xi_transforms, input_Min, input_Max = utils.get_xi_labels_from_template(df_dakota_output, "conduit_solver.template")
-    # Esempio di uso
-    #print(xi_labels)
 
     input ('...')
 

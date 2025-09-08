@@ -285,7 +285,6 @@ def process_simulation_data(std_data, bak_data):
     
     return processed_data
 
-    
 def import_dakota_bounds():
     filename = "dakota_test_parallel.in"
     
@@ -334,6 +333,41 @@ def import_dakota_bounds():
     
     return df, input_Min, input_Max
 
+def read_csv_with_labels(path):
+    """
+    Legge un CSV che può avere:
+    - Nessuna riga di intestazione -> usa header=0
+    - Una sola riga di intestazione (nomi colonne standard)
+    - Due righe: la prima con i nomi tecnici (x1, response_fn_1, ecc.)
+                 la seconda con etichette leggibili (da ignorare)
+    
+    Restituisce un DataFrame con le colonne standard (prima riga).
+    """
+    # Leggi le prime due righe come testo
+    with open(path, "r") as f:
+        first_line = f.readline().strip().split(",")
+        second_line = f.readline().strip().split(",")
+    
+    # Caso 1: il file ha una sola riga di header (nessuna seconda riga)
+    if not second_line or len(second_line) != len(first_line):
+        return pd.read_csv(path, header=0)
+
+    # Caso 2: controlliamo se la seconda riga è "etichette leggibili"
+    # Regola semplice: se almeno una colonna non è numerica pura → è label
+    def looks_like_label(s):
+        try:
+            float(s)  # se si converte a float → numero
+            return False
+        except ValueError:
+            return True
+
+    if any(looks_like_label(cell) for cell in second_line):
+        # Due righe di intestazione: saltiamo la seconda
+        return pd.read_csv(path, header=0, skiprows=[1])
+    else:
+        # In realtà la seconda riga contiene già dati → normale read_csv
+        return pd.read_csv(path, header=0)
+
 def load_or_process_csv(filename, process_func=None, dependencies=None):
     """
     Carica un CSV se esiste, altrimenti esegue una funzione di processo
@@ -354,7 +388,7 @@ def load_or_process_csv(filename, process_func=None, dependencies=None):
     """
     if os.path.isfile(filename):
         print(f"Carico {filename}")
-        return pd.read_csv(filename)
+        return read_csv_with_labels(filename)
     else:
         print(f"{filename} non trovato, eseguo {process_func.__name__ if process_func else 'nessuna funzione'}...")
         if process_func:
@@ -367,7 +401,7 @@ def load_or_process_csv(filename, process_func=None, dependencies=None):
                 else:
                     print(f"Attenzione: file {dep} mancante")
         if os.path.isfile(filename):
-            return pd.read_csv(filename)
+            return read_csv_with_labels(filename)
         return dfs if dfs else None
     
 def get_xi_labels_from_template(df, template_file):
@@ -526,7 +560,6 @@ def plot_xi_vs_response_fn(
     # Mostra senza bloccare
     plt.show(block=False)
     plt.pause(0.1)
-
 
 def plot_multiple_y_vs_single_x(
     df, 

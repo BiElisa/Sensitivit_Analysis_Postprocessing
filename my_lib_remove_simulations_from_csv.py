@@ -22,7 +22,7 @@ def remove_null_simulations(total_input, output_filename):
     if isinstance(total_input, str):
         if not os.path.exists(total_input):
             raise FileNotFoundError(f"Il file '{total_input}' non esiste. Devi crearlo.")
-        df = pd.read_csv(total_input)
+        df = utils.read_csv_with_labels(total_input)
     else:
         df = total_input.copy()  # se è già un DataFrame
 
@@ -39,7 +39,18 @@ def remove_null_simulations(total_input, output_filename):
     df_clean = df.loc[~mask_invalid].reset_index(drop=True)
 
     # 5. Salva CSV con dati puliti
-    df_clean.to_csv(output_filename, index=False)
+        # 5. Salva CSV con dati puliti **e etichette leggibili**
+    # Leggiamo la seconda riga originale
+    if isinstance(total_input, str):
+        with open(total_input, "r") as f:
+            f.readline()  # skip prima riga
+            second_line = f.readline().strip()
+        with open(output_filename, "w") as f_out:
+            f_out.write(",".join(df.columns) + "\n")  # header tecnico
+            f_out.write(second_line + "\n")           # etichette leggibili
+            df_clean.to_csv(f_out, index=False, header=False)
+    else:
+        df_clean.to_csv(output_filename, index=False)
     print(f"Salvato '{output_filename}' ({len(df_clean)} simulazioni valide, {number_null_sim} eliminate).")
 
     return df_clean, number_null_sim
