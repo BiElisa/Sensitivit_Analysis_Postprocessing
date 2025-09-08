@@ -591,7 +591,7 @@ def extract_data_at_vent (main_dir, bak_name, N):
     final_df = pd.concat([labels_df, output_df], ignore_index=True)
 
     # Salvataggio in csv
-    final_df.to_csv('data_at_fvent_total.csv', index=False)
+    final_df.to_csv('data_at_vent_total.csv', index=False)
     #output_df.to_csv('data_at_vent_total.csv', index=False)
     print("Estrazione completata. Dati salvati in 'data_at_vent_total.csv'.")
 

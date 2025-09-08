@@ -43,3 +43,4 @@ def remove_null_simulations(total_input, output_filename):
     print(f"Salvato '{output_filename}' ({len(df_clean)} simulazioni valide, {number_null_sim} eliminate).")
 
     return df_clean, number_null_sim
+

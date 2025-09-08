@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os
 import sys
 import my_lib_process_utils as utils
-import remove_null_simulations as rm
+import my_lib_remove_simulations_from_csv as rm
 
 if __name__ == '__main__':
     """
