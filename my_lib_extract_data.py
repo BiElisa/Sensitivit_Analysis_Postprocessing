@@ -30,7 +30,7 @@ def extract_data_at_frag(main_dir, bak_name, N):
     
     # 2. Loop sulle simulazioni
     for index_simul in range(N):
-        print(f'{round((index_simul + 1)/N *100, 1)}% of extract_data_at_frag completed') 
+        print(f'\r{round((index_simul + 1)/N *100, 1)}% of extract_data_at_frag completed', end='', flush=True) 
 
         #Chiamo funzione che cerca e legge .std file e .bak file
         std_data, bak_data = utils.search_and_read_std_file( main_dir, bak_name, index_simul)       
@@ -303,7 +303,7 @@ def extract_data_at_frag(main_dir, bak_name, N):
 
     # Salvataggio in csv
     final_df.to_csv('data_at_fragmentation_total.csv', index=False)
-    print("Estrazione completata. Dati salvati in 'data_at_fragmentation_total.csv'.")
+    print("\nEstrazione completata. Dati salvati in 'data_at_fragmentation_total.csv'.")
 
     # Rimuoviamo le simulazini nulle
     rm.remove_null_simulations("data_at_fragmentation_total.csv", "data_at_fragmentation.csv")
@@ -336,7 +336,7 @@ def extract_data_at_inlet(main_dir, bak_name, N):
     
     # 2. Loop sulle simulazioni
     for index_simul in range(N):
-        print(f'{round((index_simul + 1)/N *100, 1)}% of extract_data_at_inlet completed') 
+        print(f'\r{round((index_simul + 1)/N *100, 1)}% of extract_data_at_inlet completed', end='', flush=True) 
 
         #Chiamo funzione che cerca e legge .std file e .bak file
         std_data, bak_data = utils.search_and_read_std_file( main_dir, bak_name, index_simul)
@@ -436,7 +436,7 @@ def extract_data_at_inlet(main_dir, bak_name, N):
     final_df.to_csv('data_at_inlet_total.csv', index=False)
 
     #output_df.to_csv('data_at_inlet_total.csv', index=False)
-    print("Estrazione completata. Dati salvati in 'data_at_inlet_total.csv'.")
+    print("\nEstrazione completata. Dati salvati in 'data_at_inlet_total.csv'.")
 
     # Rimuoviamo le simulazini nulle
     rm.remove_null_simulations("data_at_inlet_total.csv", "data_at_inlet.csv")
@@ -468,7 +468,7 @@ def extract_data_at_vent (main_dir, bak_name, N):
     
     # 2. Loop sulle simulazioni
     for index_simul in range(N):
-        print(f'{round((index_simul + 1)/N *100, 1)}% of extract_data_at_vent completed') 
+        print(f'\r{round((index_simul + 1)/N *100, 1)}% of extract_data_at_vent completed', end='', flush=True) 
 
         #Chiamo funzione che cerca e legge .std file e .bak file
         std_data, bak_data = utils.search_and_read_std_file( main_dir, bak_name, index_simul)       
@@ -624,7 +624,7 @@ def extract_data_at_vent (main_dir, bak_name, N):
     # Salvataggio in csv
     final_df.to_csv('data_at_vent_total.csv', index=False)
     #output_df.to_csv('data_at_vent_total.csv', index=False)
-    print("Estrazione completata. Dati salvati in 'data_at_vent_total.csv'.")
+    print("\nEstrazione completata. Dati salvati in 'data_at_vent_total.csv'.")
 
     # Rimuoviamo le simulazini nulle
     rm.remove_null_simulations("data_at_vent_total.csv", "data_at_vent.csv")
@@ -656,7 +656,7 @@ def extract_data_average (main_dir, bak_name, N):
     
     # 2. Loop sulle simulazioni
     for index_simul in range(N):
-        print(f'{round((index_simul + 1)/N *100, 1)}% of extract_data_average completed') 
+        print(f'\r{round((index_simul + 1)/N *100, 1)}% of extract_data_average completed', end='', flush=True) 
 
         #Chiamo funzione che cerca e legge .std file e .bak file
         std_data, bak_data = utils.search_and_read_std_file( main_dir, bak_name, index_simul)       
@@ -781,7 +781,7 @@ def extract_data_average (main_dir, bak_name, N):
     # Salvataggio in csv
     final_df.to_csv('data_average_total.csv', index=False)
     #output_df.to_csv('data_average_total.csv', index=False)
-    print("Estrazione completata. Dati salvati in 'data_average_total.csv'.")
+    print("\nEstrazione completata. Dati salvati in 'data_average_total.csv'.")
 
     # Rimuoviamo le simulazini nulle
     rm.remove_null_simulations("data_average_total.csv", "data_average.csv")

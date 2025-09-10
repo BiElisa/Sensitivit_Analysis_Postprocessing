@@ -20,9 +20,17 @@ Execute the script "extract_allData.py", for example by terminal:
 
 $ python extract_allData.py 
 
-This generates four .csv files 
+You can also use two input parameters "verbose" and "pause", for example:
+
+$ python extract_allData.py --verbose true --pause false
+
+The script "extract_allData.py" generates the following 'csv' files, in order:
 
 1. data_at_fragmentation_total.csv
-2. data_at_inlet_total.csv
-3. data_at_vent_total.csv
-4. data_average_total.csv
+2. data_at_fragmentation.csv
+3. data_at_inlet_total.csv
+4. data_at_inlet.csv
+5. data_at_vent_total.csv
+6. data_at_vent.csv
+7. data_average_total.csv
+8. data_average.csv
