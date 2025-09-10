@@ -294,8 +294,8 @@ def extract_data_at_frag(main_dir, bak_name, N):
 
     # Salvataggio in csv
     final_df.to_csv('data_at_fragmentation_total.csv', index=False)
-    #output_df.to_csv('data_at_fragmentation_total.csv', index=False)
     print("Estrazione completata. Dati salvati in 'data_at_fragmentation_total.csv'.")
+    
 
 def extract_data_at_inlet(main_dir, bak_name, N):
     """
