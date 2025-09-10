@@ -2,13 +2,13 @@ import os
 import tkinter as tk
 from tkinter import filedialog
 import numpy as np
-import my_lib_extract_data
 import sys
+import argparse
+import my_lib_extract_data as extract
 import my_lib_process_utils as utils
 import my_lib_remove_simulations_from_csv as rm
 
-
-if __name__ == '__main__':
+def extract_allData (verbose = True, pause = True):
 
     print("\n\n ---- Start the execution of extract_allData ----\n")
 
@@ -23,6 +23,8 @@ if __name__ == '__main__':
     if not filepath:
         print("Nessun file selezionato. Operazione annullata.")
     else:
+
+        #region -- Importiamo il tabellne generato da Dakota --
         # Trova la cartella principale risalendo dal percorso del file selezionato
         # Ad esempio, da '.../workdir.1/file.bak' si ottiene '...'
         main_dir = os.path.dirname(os.path.dirname(filepath))
@@ -30,8 +32,9 @@ if __name__ == '__main__':
         # Estrai il nome del file di riferimento
         bak_name = os.path.basename(filepath)
         
-        print(f"Cartella principale identificata: {main_dir}")
-        print(f"Nome del file '.bak' di riferimento: {bak_name}")
+        if verbose:
+            print(f"Cartella principale identificata: {main_dir}")
+            print(f"Nome del file '.bak' di riferimento: {bak_name}")
 
         # Importa i dati tabulari di Dakota per determinare N e memorizzare {xi} e {response_fn_i}
         df_dakota_output = utils.import_dakota_tabular_new()
@@ -39,13 +42,17 @@ if __name__ == '__main__':
             sys.exit()
 
         N = len(df_dakota_output)
-        print(f"Totale simulazioni trovate {N}.")
+        if verbose:
+            print(f"Totale simulazioni trovate {N}.")
 
-        # Puliamo il tabellone generato da dakota dalle simulazioni nulle 
-        print("Andiamo ad eliminare le simulazioni nulle.")
+        #endregion
+
+        # -- Puliamo il tabellone generato da dakota dalle simulazioni nulle --
+        if verbose:
+            print("Andiamo ad eliminare le simulazioni nulle.")
         df_dakota_clean, number_null_sim = rm.remove_null_simulations(df_dakota_output, "simulations.csv")
 
-        # Aggiunta di nuove colonne ----
+        #region -- Aggiunta di nuove colonne a "simulations.csv--
 
         # Total crystal content
         df_dakota_clean["response_fn_16"] = (
@@ -66,13 +73,15 @@ if __name__ == '__main__':
             236.0 * (df_dakota_clean["response_fn_12"] ** 0.25),
             (df_dakota_clean["response_fn_4"] ** 2.0) / (2.0 * 9.8)
         )
+        #endregion
 
-        # Aggiungiamo una seconda riga al tabellone per avere delle labels leggibili
+        #region -- Aggiungiamo una seconda riga al tabellone per avere labels leggibili --
         
         # Trova tutte le colonne che iniziano con 'x'
         xi_cols = [col for col in df_dakota_output.columns if col.startswith('x')]
         n_xi = len(xi_cols)
-        print(f"Trovate {n_xi} variabili di input xi: {xi_cols}")
+        if verbose:
+            print(f"Trovate {n_xi} variabili di input xi: {xi_cols}")
 
         # Converti dinamicamente in array numpy
         xi_arrays = {col: df_dakota_output[col].to_numpy() for col in xi_cols}
@@ -118,13 +127,54 @@ if __name__ == '__main__':
             f.write(",".join(df_dakota_clean.columns) + "\n")
             f.write(",".join(labels_row) + "\n")
             df_dakota_clean.to_csv(f, index=False, header=False)
-        
-        print(f"I dati delle simulazioni avvenute con successo vengono salvati in {filename_with_labels}, dove ogni colonna ha doppia intestazione.\n")
-        input("...")
 
+        #endregion
+        
+        if verbose:
+            print(f"I dati delle simulazioni avvenute con successo vengono salvati in {filename_with_labels}, dove ogni colonna ha doppia intestazione.")
+            print("Passiamo ad estrapolare maggiori informazioni da questi dati.")
 
         # Chiama le funzioni di estrazione, passando il percorso della cartella principale
-        my_lib_extract_data.extract_data_at_frag(main_dir, bak_name, N)
-        my_lib_extract_data.extract_data_at_inlet(main_dir, bak_name, N)
-        my_lib_extract_data.extract_data_at_vent(main_dir, bak_name, N)
-        my_lib_extract_data.extract_data_average(main_dir, bak_name, N)
+        if pause:
+            input("\nCerchiamo oppure creiamo le informazioni alla frammentazione...")
+        extract.extract_data_at_frag(main_dir, bak_name, N)
+        
+        if pause:
+            input("\nCerchiamo oppure creiamo le informazioni all'inlet...")
+        extract.extract_data_at_inlet(main_dir, bak_name, N)
+        
+        if pause:
+            input("\nCerchiamo oppure creiamo le informazioni al vent...")
+        extract.extract_data_at_vent(main_dir, bak_name, N)
+
+        if pause:
+            input("\nCerchiamo oppure creiamo le informazioni averaged...")
+        extract.extract_data_average(main_dir, bak_name, N)
+
+
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description="Esempio con booleani verbose e pause")
+    
+    parser.add_argument(
+        "--verbose", 
+        type=lambda v: v.lower() in ("true", "1", "yes"), 
+        default=True, 
+        help="Attiva modalità verbose (default True)"
+    )
+    parser.add_argument(
+        "--pause", 
+        type=lambda v: v.lower() in ("true", "1", "yes"), 
+        default=True, 
+        help="Pausa all'esecuzione (default True)"
+    )
+    
+    args = parser.parse_args()
+    
+    extract_allData(args.verbose, args.pause)
+
+
+
+

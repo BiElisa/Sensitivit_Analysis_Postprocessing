@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 import os
-import my_lib_process_utils 
+import my_lib_process_utils as utils
+import my_lib_remove_simulations_from_csv as rm
 
 def extract_data_at_frag(main_dir, bak_name, N):
     """
@@ -13,7 +14,15 @@ def extract_data_at_frag(main_dir, bak_name, N):
     """
 
     if os.path.exists('data_at_fragmentation_total.csv'):
-        print(f"'data_at_fragmentation_total.csv' esiste già. La funzione extract_data_at_frag non verrà eseguita.")
+        print(f"'data_at_fragmentation_total.csv' esiste già")
+        
+        if os.path.exists('data_at_fragmentation.csv'):
+            print("'data_at_fragmentation.csv' esiste già")
+            print("La funzione extract_data_at_frag non verrà eseguita.")
+            return
+        
+        print("'data_at_fragmentation.csv' invece va creato")
+        rm.remove_null_simulations("data_at_fragmentation_total.csv", "data_at_fragmentation.csv")
         return
 
     # 1. Inizializza i dizionari per i dati di risposta
@@ -24,12 +33,12 @@ def extract_data_at_frag(main_dir, bak_name, N):
         print(f'{round((index_simul + 1)/N *100, 1)}% of extract_data_at_frag completed') 
 
         #Chiamo funzione che cerca e legge .std file e .bak file
-        std_data, bak_data = my_lib_process_utils.search_and_read_std_file( main_dir, bak_name, index_simul)       
+        std_data, bak_data = utils.search_and_read_std_file( main_dir, bak_name, index_simul)       
 
         # 3. Elaborazione dei dati se i file sono disponibili
         if (std_data is not None and bak_data is not None):
 
-            data = my_lib_process_utils.process_simulation_data(std_data, bak_data)
+            data = utils.process_simulation_data(std_data, bak_data)
 
             # Per leggibilita` del seguito, copio localmente alcune variabili
             radius = data['RADIUS']
@@ -295,7 +304,10 @@ def extract_data_at_frag(main_dir, bak_name, N):
     # Salvataggio in csv
     final_df.to_csv('data_at_fragmentation_total.csv', index=False)
     print("Estrazione completata. Dati salvati in 'data_at_fragmentation_total.csv'.")
-    
+
+    # Rimuoviamo le simulazini nulle
+    rm.remove_null_simulations("data_at_fragmentation_total.csv", "data_at_fragmentation.csv")
+
 
 def extract_data_at_inlet(main_dir, bak_name, N):
     """
@@ -308,7 +320,15 @@ def extract_data_at_inlet(main_dir, bak_name, N):
 
     # Controllo se il file esiste già
     if os.path.exists('data_at_inlet_total.csv'):
-        print(f"'data_at_inlet_total.csv' esiste già. La funzione extract_data_at_inlet non verrà eseguita.")
+        print(f"'data_at_inlet_total.csv' esiste già")
+        
+        if os.path.exists('data_at_inlet.csv'):
+            print("'data_at_inlet.csv' esiste già")
+            print("La funzione extract_data_at_inlet non verrà eseguita.")
+            return
+        
+        print("'data_at_inlet.csv' invece va creato")
+        rm.remove_null_simulations("data_at_inlet_total.csv", "data_at_inlet.csv")
         return
 
     # 1. Inizializza i dizionari per i dati di risposta
@@ -319,12 +339,12 @@ def extract_data_at_inlet(main_dir, bak_name, N):
         print(f'{round((index_simul + 1)/N *100, 1)}% of extract_data_at_inlet completed') 
 
         #Chiamo funzione che cerca e legge .std file e .bak file
-        std_data, bak_data = my_lib_process_utils.search_and_read_std_file( main_dir, bak_name, index_simul)
+        std_data, bak_data = utils.search_and_read_std_file( main_dir, bak_name, index_simul)
 
         # 3. Elaborazione dei dati se i file sono disponibili
         if (std_data is not None and bak_data is not None):
 
-            data = my_lib_process_utils.process_simulation_data(std_data, bak_data)
+            data = utils.process_simulation_data(std_data, bak_data)
 
             # Per leggibilita` del seguito, copio localmente alcune variabili
             #radius = data['RADIUS']
@@ -418,6 +438,9 @@ def extract_data_at_inlet(main_dir, bak_name, N):
     #output_df.to_csv('data_at_inlet_total.csv', index=False)
     print("Estrazione completata. Dati salvati in 'data_at_inlet_total.csv'.")
 
+    # Rimuoviamo le simulazini nulle
+    rm.remove_null_simulations("data_at_inlet_total.csv", "data_at_inlet.csv")
+
 
 def extract_data_at_vent (main_dir, bak_name, N):
     """
@@ -429,7 +452,15 @@ def extract_data_at_vent (main_dir, bak_name, N):
     """
     
     if os.path.exists('data_at_vent_total.csv'):
-        print(f"'data_at_vent_total.csv' esiste già. La funzione extract_data_at_vent non verrà eseguita.")
+        print(f"'data_at_vent_total.csv' esiste già")
+        
+        if os.path.exists('data_at_vent.csv'):
+            print("'data_at_vent.csv' esiste già")
+            print("La funzione extract_data_at_vent non verrà eseguita.")
+            return
+        
+        print("'data_at_vent.csv' invece va creato")
+        rm.remove_null_simulations("data_at_vent_total.csv", "data_at_vent.csv")
         return
 
     # 1. Inizializza i dizionari per i dati di risposta
@@ -440,12 +471,12 @@ def extract_data_at_vent (main_dir, bak_name, N):
         print(f'{round((index_simul + 1)/N *100, 1)}% of extract_data_at_vent completed') 
 
         #Chiamo funzione che cerca e legge .std file e .bak file
-        std_data, bak_data = my_lib_process_utils.search_and_read_std_file( main_dir, bak_name, index_simul)       
+        std_data, bak_data = utils.search_and_read_std_file( main_dir, bak_name, index_simul)       
 
         # 3. Elaborazione dei dati se i file sono disponibili
         if (std_data is not None and bak_data is not None):
 
-            data = my_lib_process_utils.process_simulation_data(std_data, bak_data)
+            data = utils.process_simulation_data(std_data, bak_data)
 
             # Per leggibilita` del seguito, copio localmente alcune variabili
             radius = data['RADIUS']
@@ -595,6 +626,10 @@ def extract_data_at_vent (main_dir, bak_name, N):
     #output_df.to_csv('data_at_vent_total.csv', index=False)
     print("Estrazione completata. Dati salvati in 'data_at_vent_total.csv'.")
 
+    # Rimuoviamo le simulazini nulle
+    rm.remove_null_simulations("data_at_vent_total.csv", "data_at_vent.csv")
+
+
 def extract_data_average (main_dir, bak_name, N):
     """
     Estrae i dati da tutti i file .bak e .std contenuti nelle cartelle workdir.N.
@@ -605,7 +640,15 @@ def extract_data_average (main_dir, bak_name, N):
     """
 
     if os.path.exists('data_average_total.csv'):
-        print(f"'data_average_total.csv' esiste già. La funzione extract_data_average non verrà eseguita.")
+        print(f"'data_average_total.csv' esiste già")
+        
+        if os.path.exists('data_average.csv'):
+            print("'data_average.csv' esiste già")
+            print("La funzione extract_data_average non verrà eseguita.")
+            return
+        
+        print("'data_average.csv' invece va creato")
+        rm.remove_null_simulations("data_average_total.csv", "data_average.csv")
         return
 
     # 1. Inizializza i dizionari per i dati di risposta
@@ -616,12 +659,12 @@ def extract_data_average (main_dir, bak_name, N):
         print(f'{round((index_simul + 1)/N *100, 1)}% of extract_data_average completed') 
 
         #Chiamo funzione che cerca e legge .std file e .bak file
-        std_data, bak_data = my_lib_process_utils.search_and_read_std_file( main_dir, bak_name, index_simul)       
+        std_data, bak_data = utils.search_and_read_std_file( main_dir, bak_name, index_simul)       
 
         # 3. Elaborazione dei dati se i file sono disponibili
         if (std_data is not None and bak_data is not None):
 
-            data = my_lib_process_utils.process_simulation_data(std_data, bak_data)
+            data = utils.process_simulation_data(std_data, bak_data)
 
             # Per leggibilita` del seguito, copio localmente alcune variabili
             Z0 = data['Z0']
@@ -739,3 +782,6 @@ def extract_data_average (main_dir, bak_name, N):
     final_df.to_csv('data_average_total.csv', index=False)
     #output_df.to_csv('data_average_total.csv', index=False)
     print("Estrazione completata. Dati salvati in 'data_average_total.csv'.")
+
+    # Rimuoviamo le simulazini nulle
+    rm.remove_null_simulations("data_average_total.csv", "data_average.csv")
