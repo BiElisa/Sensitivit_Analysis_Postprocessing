@@ -43,17 +43,17 @@ if __name__ == '__main__':
     #region -- Carichiamo tutti i file e dati che ci servono
 
     # Cerchiamo i limiti inferiori e superiori assegnati ai parametri di input
-    df_dakota_input, dakota_input_Min, dakota_input_Max  = utils.import_dakota_bounds()
+    #df_dakota_input, dakota_input_Min, dakota_input_Max  = utils.import_dakota_bounds()
 
-    df_dakota_output = utils.read_csv_with_labels("simulations.csv")
+    df_dakota_output = pd.read_csv("simulations.csv")
 
-    df_fragmentation = utils.read_csv_with_labels("data_at_fragmentation.csv")
+    df_fragmentation = pd.read_csv("data_at_fragmentation.csv")
 
-    df_inlet = utils.read_csv_with_labels("data_at_inlet.csv")
+    df_inlet = pd.read_csv("data_at_inlet.csv")
 
-    df_vent = utils.read_csv_with_labels("data_at_vent.csv")
+    df_vent = pd.read_csv("data_at_vent.csv")
 
-    df_average = utils.read_csv_with_labels("data_average.csv")
+    df_average = pd.read_csv("data_average.csv")
 
     df_concat = pd.concat([df_dakota_output, df_fragmentation, df_inlet, df_vent, df_average], axis=1)
     print(f'df_concat = \n{df_concat}')
@@ -66,11 +66,18 @@ if __name__ == '__main__':
     # Numero di step per il campionamento
     num_step_campionamento = 3
 
+    xi_labels, input_Min, input_Max = utils.get_xi_labels_from_template(
+        df_dakota_output, 
+        "conduit_solver.template",
+        transform = True,
+        header_rows_to_skip=1)
+    print(xi_labels)
+    print(df_dakota_output)
+
     input ('...')
 
     utils.plot_xi_vs_response_fn(
         xi_labels=xi_labels,
-        xi_transforms=xi_transforms,
         input_Min=input_Min,
         input_Max=input_Max,
         df = df_concat,
@@ -83,7 +90,6 @@ if __name__ == '__main__':
 
     utils.plot_xi_vs_response_fn(
         xi_labels=xi_labels,
-        xi_transforms=xi_transforms,
         input_Min=input_Min,
         input_Max=input_Max,
         df = df_concat,
@@ -96,7 +102,6 @@ if __name__ == '__main__':
 
     utils.plot_xi_vs_response_fn(
         xi_labels=xi_labels,
-        xi_transforms=xi_transforms,
         input_Min=input_Min,
         input_Max=input_Max,
         df = df_concat,
@@ -109,7 +114,6 @@ if __name__ == '__main__':
 
     utils.plot_xi_vs_response_fn(
         xi_labels=xi_labels,
-        xi_transforms=xi_transforms,
         input_Min=input_Min,
         input_Max=input_Max,
         df = df_concat,
@@ -125,7 +129,6 @@ if __name__ == '__main__':
 
     utils.plot_xi_vs_response_fn(
         xi_labels=xi_labels,
-        xi_transforms=xi_transforms,
         input_Min=input_Min,
         input_Max=input_Max,
         df = df_concat,

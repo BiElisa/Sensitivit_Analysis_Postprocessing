@@ -404,23 +404,43 @@ def load_or_process_csv(filename, process_func=None, dependencies=None):
             return read_csv_with_labels(filename)
         return dfs if dfs else None
     
-def get_xi_labels_from_template(df, template_file):
+def get_xi_labels_from_template(df, template_file, transform = True, header_rows_to_skip=0):
     """
     Legge il file conduit_solver.template e restituisce un dizionario che
-    mappa ogni xi (es. 'x1') al nome della variabile associata.
+    mappa ogni xi (es. 'x1') al nome della variabile associata. Applica
+    eventuali trasformazioni al DataFrame.
 
     Parameters
     ----------
+    df : pd.DataFrame
+        DataFrame contenente le colonne xi
     template_file : str
         Percorso al file conduit_solver.template
+    transform : bool
+        Se True applica le trasformazioni (es. K -> °C)
+    header_rows_to_skip : int
+        Numero di righe di intestazione extra da saltare nel DataFrame
 
     Returns
     -------
-    dict
-        Dizionario { 'x1': 'P1_IN', 'x2': 'T_IN', ... }
+    xi_labels : dict
+        Dizionario { 'x1': 'Inlet temp. [°C]', ... }
+    input_Min : np.array
+        Valori minimi di ciascun xi
+    input_Max : np.array
+        Valori massimi di ciascun xi
     """
+    
+    # Se ci sono righe di intestazione extra, salta quelle righe
+    if header_rows_to_skip > 0:
+        df = df.iloc[header_rows_to_skip:].reset_index(drop=True)
+
+    # Converte automaticamente le colonne xi in numerico
+    xi_cols = [col for col in df.columns if col.startswith('x')]
+    for xi in xi_cols:
+        df[xi] = pd.to_numeric(df[xi], errors='coerce')
+
     xi_labels = {}
-    xi_transforms = {}
 
     with open(template_file, 'r') as f:
         for line in f:
@@ -429,41 +449,62 @@ def get_xi_labels_from_template(df, template_file):
                 var_name = line.split('=')[0].strip()
 
                 # Assegna label e trasformazione secondo regole
-                for i, xi in enumerate(matches):
+                for xi in matches:
                     if var_name == 'RADIUS':
                         xi_labels[xi] = 'Radius [m]'
-                        xi_transforms[xi] = lambda x: x
                     elif var_name == 'T_IN':
-                        xi_labels[xi] = 'Inlet temp. [°C]'
-                        xi_transforms[xi] = lambda x: x - 273
+                        if transform:
+                            xi_labels[xi] = 'Inlet temp. [°C]'
+                            if xi in df.columns:
+                                df[xi] = df[xi] - 273
+                        else:
+                            xi_labels[xi] = 'Inlet temp. [K]'
                     elif var_name == 'P1_IN':
-                        xi_labels[xi] = 'Inlet press. [MPa]'
-                        xi_transforms[xi] = lambda x: x / 1e6
+                        if transform:
+                            xi_labels[xi] = 'Inlet press. [MPa]'
+                            if xi in df.columns:
+                                df[xi] = df[xi] / 1e6
+                        else:
+                            xi_labels[xi] = 'Inlet press. [Pa]'
                     elif var_name == 'BETA_C0':
-                        xi_labels[xi] = 'Phenocryst. content [vol.%]'
-                        xi_transforms[xi] = lambda x: x * 100
+                        if transform:
+                            xi_labels[xi] = 'Phenocryst. content [vol.%]'
+                            if xi in df.columns:
+                                df[xi] = df[xi] * 100
+                        else:
+                            xi_labels[xi] = 'Phenocryst. content [vol.]'
                     elif var_name == 'X_EX_DIS_IN':
                         if len(matches) == 2:
-                            xi_labels[matches[0]] = 'Inlet H2O content [wt.%]'
-                            xi_labels[matches[1]] = 'Inlet CO2 content [wt.%]'
-                            xi_transforms[matches[0]] = lambda x: x * 100
-                            xi_transforms[matches[1]] = lambda x: x * 100
+                            if transform:
+                                xi_labels[matches[0]] = 'Inlet H2O content [wt.%]'
+                                xi_labels[matches[1]] = 'Inlet CO2 content [wt.%]'
+                                if matches[0] in df.columns:
+                                    df[matches[0]] = df[matches[0]] * 100
+                                if matches[1] in df.columns:
+                                    df[matches[1]] = df[matches[1]] * 100
+                            else:
+                                xi_labels[matches[0]] = 'Inlet H2O content [wt.]'
+                                xi_labels[matches[1]] = 'Inlet CO2 content [wt.]'
                         elif len(matches) == 1:
-                            xi_labels[xi] = 'Inlet H2O content [wt.%]'
-                            xi_transforms[xi] = lambda x: x * 100
+                            if transform:
+                                xi_labels[xi] = 'Inlet H2O content [wt.%]'
+                                if xi in df.columns:
+                                    df[xi] = df[xi] * 100
+                            else:
+                                xi_labels[xi] = 'Inlet H2O content [wt.]'
                     else:
                         xi_labels[xi] = var_name
-                        xi_transforms[xi] = lambda x: x
 
     # Trova tutte le colonne xi presenti nel DataFrame
     xi_cols = [col for col in df.columns if col.startswith('x')]
-    n_xi = len(xi_cols)
 
     # Calcola dinamicamente i limiti di input
     input_Min = np.array([df[xi].min() for xi in xi_cols])
     input_Max = np.array([df[xi].max() for xi in xi_cols])
 
-    return xi_labels, xi_transforms, input_Min, input_Max
+    if transform:
+        return xi_labels, input_Min, input_Max, df
+    return xi_labels
 
 def plot_xi_vs_response_fn( 
         xi_labels, 
