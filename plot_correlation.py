@@ -42,9 +42,6 @@ if __name__ == '__main__':
 
     #region -- Carichiamo tutti i file e dati che ci servono
 
-    # Cerchiamo i limiti inferiori e superiori assegnati ai parametri di input
-    #df_dakota_input, dakota_input_Min, dakota_input_Max  = utils.import_dakota_bounds()
-
     df_dakota_output = pd.read_csv("simulations.csv")
 
     df_fragmentation = pd.read_csv("data_at_fragmentation.csv")
@@ -56,8 +53,16 @@ if __name__ == '__main__':
     df_average = pd.read_csv("data_average.csv")
 
     df_concat = pd.concat([df_dakota_output, df_fragmentation, df_inlet, df_vent, df_average], axis=1)
-    print(f'df_concat = \n{df_concat}')
+    print(f'\ndf_concat = \n{df_concat}')
     input('...')
+
+    df_fixed = utils.fix_headers(df_concat)
+
+    df_transformed = utils.transform_units_of_variables(df_fixed)
+    print(f'\df_transformed = \n{df_transformed}')
+    df_transformed.to_csv("output_transformed.csv", index=False, header=True)
+
+    input ('...')
 
     #endregion
 
@@ -65,16 +70,6 @@ if __name__ == '__main__':
 
     # Numero di step per il campionamento
     num_step_campionamento = 3
-
-    xi_labels, input_Min, input_Max = utils.get_xi_labels_from_template(
-        df_dakota_output, 
-        "conduit_solver.template",
-        transform = True,
-        header_rows_to_skip=1)
-    print(xi_labels)
-    print(df_dakota_output)
-
-    input ('...')
 
     utils.plot_xi_vs_response_fn(
         xi_labels=xi_labels,

@@ -88,11 +88,7 @@ def extract_allData (verbose = True, pause = True):
             print("Abort: The file 'conduit_solver.template' is not in the folder.")
             sys.exit(1)
 
-        xi_labels = utils.get_xi_labels_from_template(
-            df_dakota_output, 
-            "conduit_solver.template",
-            transform = False
-            )
+        xi_labels = utils.get_xi_labels_from_template(df_dakota_output, "conduit_solver.template",)
         if verbose:
             print(f"xi_labels = \n{xi_labels}")
 

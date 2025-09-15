@@ -404,11 +404,10 @@ def load_or_process_csv(filename, process_func=None, dependencies=None):
             return read_csv_with_labels(filename)
         return dfs if dfs else None
     
-def get_xi_labels_from_template(df, template_file, transform = True, header_rows_to_skip=0):
+def get_xi_labels_from_template(df, template_file):
     """
     Legge il file conduit_solver.template e restituisce un dizionario che
-    mappa ogni xi (es. 'x1') al nome della variabile associata. Applica
-    eventuali trasformazioni al DataFrame.
+    mappa ogni xi (es. 'x1') al nome della variabile associata. 
 
     Parameters
     ----------
@@ -416,8 +415,6 @@ def get_xi_labels_from_template(df, template_file, transform = True, header_rows
         DataFrame contenente le colonne xi
     template_file : str
         Percorso al file conduit_solver.template
-    transform : bool
-        Se True applica le trasformazioni (es. K -> °C)
     header_rows_to_skip : int
         Numero di righe di intestazione extra da saltare nel DataFrame
 
@@ -425,15 +422,7 @@ def get_xi_labels_from_template(df, template_file, transform = True, header_rows
     -------
     xi_labels : dict
         Dizionario { 'x1': 'Inlet temp. [°C]', ... }
-    input_Min : np.array
-        Valori minimi di ciascun xi
-    input_Max : np.array
-        Valori massimi di ciascun xi
     """
-    
-    # Se ci sono righe di intestazione extra, salta quelle righe
-    if header_rows_to_skip > 0:
-        df = df.iloc[header_rows_to_skip:].reset_index(drop=True)
 
     # Converte automaticamente le colonne xi in numerico
     xi_cols = [col for col in df.columns if col.startswith('x')]
@@ -453,58 +442,94 @@ def get_xi_labels_from_template(df, template_file, transform = True, header_rows
                     if var_name == 'RADIUS':
                         xi_labels[xi] = 'Radius [m]'
                     elif var_name == 'T_IN':
-                        if transform:
-                            xi_labels[xi] = 'Inlet temp. [°C]'
-                            if xi in df.columns:
-                                df[xi] = df[xi] - 273
-                        else:
-                            xi_labels[xi] = 'Inlet temp. [K]'
+                        xi_labels[xi] = 'Inlet temp. [K]'
                     elif var_name == 'P1_IN':
-                        if transform:
-                            xi_labels[xi] = 'Inlet press. [MPa]'
-                            if xi in df.columns:
-                                df[xi] = df[xi] / 1e6
-                        else:
-                            xi_labels[xi] = 'Inlet press. [Pa]'
+                        xi_labels[xi] = 'Inlet press. [Pa]'
                     elif var_name == 'BETA_C0':
-                        if transform:
-                            xi_labels[xi] = 'Phenocryst. content [vol.%]'
-                            if xi in df.columns:
-                                df[xi] = df[xi] * 100
-                        else:
-                            xi_labels[xi] = 'Phenocryst. content [vol.]'
+                        xi_labels[xi] = 'Phenocryst. content [vol.]'
                     elif var_name == 'X_EX_DIS_IN':
                         if len(matches) == 2:
-                            if transform:
-                                xi_labels[matches[0]] = 'Inlet H2O content [wt.%]'
-                                xi_labels[matches[1]] = 'Inlet CO2 content [wt.%]'
-                                if matches[0] in df.columns:
-                                    df[matches[0]] = df[matches[0]] * 100
-                                if matches[1] in df.columns:
-                                    df[matches[1]] = df[matches[1]] * 100
-                            else:
-                                xi_labels[matches[0]] = 'Inlet H2O content [wt.]'
-                                xi_labels[matches[1]] = 'Inlet CO2 content [wt.]'
+                            xi_labels[matches[0]] = 'Inlet H2O content [wt.]'
+                            xi_labels[matches[1]] = 'Inlet CO2 content [wt.]'
                         elif len(matches) == 1:
-                            if transform:
-                                xi_labels[xi] = 'Inlet H2O content [wt.%]'
-                                if xi in df.columns:
-                                    df[xi] = df[xi] * 100
-                            else:
-                                xi_labels[xi] = 'Inlet H2O content [wt.]'
+                            xi_labels[xi] = 'Inlet H2O content [wt.]'
                     else:
                         xi_labels[xi] = var_name
 
     # Trova tutte le colonne xi presenti nel DataFrame
     xi_cols = [col for col in df.columns if col.startswith('x')]
 
-    # Calcola dinamicamente i limiti di input
-    input_Min = np.array([df[xi].min() for xi in xi_cols])
-    input_Max = np.array([df[xi].max() for xi in xi_cols])
-
-    if transform:
-        return xi_labels, input_Min, input_Max, df
     return xi_labels
+
+def fix_headers(df):
+    # prendi la prima riga come seconda intestazione
+    second_header = df.iloc[0].apply(lambda x: str(x) if pd.notnull(x) else "")
+
+    # costruisci MultiIndex (colonna_originale, etichetta_secondaria)
+    new_columns = pd.MultiIndex.from_arrays([df.columns, second_header])
+
+    # rimuovi la prima riga dai dati
+    df_fixed = df.iloc[1:].copy().reset_index(drop=True)
+    df_fixed.columns = new_columns
+
+    return df_fixed
+
+
+def transform_units_of_variables(df):
+    """
+    Applica trasformazioni di unità di misura al DataFrame in base
+    alle etichette di unità presenti nella seconda riga di intestazione.
+    
+    Regole:
+    - [Pa]   → diviso per 1e6, sostituito con [MPa]
+    - [K]    → meno 273, sostituito con [°C]
+    - [vol.] → moltiplicato per 100, sostituito con [vol.%]
+    - [wt.]  → moltiplicato per 100, sostituito con [wt.%]
+
+    Se il DataFrame non ha MultiIndex nelle colonne,
+    prova a costruirlo automaticamente con fix_headers().
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame con due righe di intestazione:
+        - la prima contiene i nomi "x1, x2..."
+        - la seconda contiene le descrizioni con unità di misura.
+
+    Returns
+    -------
+    df : pd.DataFrame
+        DataFrame con colonne trasformate e unità aggiornate.
+    """
+
+    # Se le colonne NON sono MultiIndex → fix_headers
+    if not isinstance(df.columns, pd.MultiIndex):
+        df = fix_headers(df)
+
+    df = df.copy()
+
+    new_columns = []
+    for head1, head2 in df.columns:
+        new_label = head2
+        if "[Pa]" in head2:
+            df[(head1, head2)] = pd.to_numeric(df[(head1, head2)], errors="coerce") / 1e6
+            new_label = head2.replace("[Pa]", "[MPa]")
+        elif "[K]" in head2:
+            df[(head1, head2)] = pd.to_numeric(df[(head1, head2)], errors="coerce") - 273
+            new_label = head2.replace("[K]", "[°C]")
+        elif "[vol.]" in head2:
+            df[(head1, head2)] = pd.to_numeric(df[(head1, head2)], errors="coerce") * 100
+            new_label = head2.replace("[vol.]", "[vol.%]")
+        elif "[wt.]" in head2:
+            df[(head1, head2)] = pd.to_numeric(df[(head1, head2)], errors="coerce") * 100
+            new_label = head2.replace("[wt.]", "[wt.%]")
+
+        new_columns.append((head1, new_label))
+
+    # Aggiorna le intestazioni con i nuovi label
+    df.columns= pd.MultiIndex.from_tuples(new_columns)
+
+    return df
 
 def plot_xi_vs_response_fn( 
         xi_labels, 
