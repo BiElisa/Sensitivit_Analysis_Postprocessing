@@ -299,10 +299,19 @@ def extract_data_at_frag(main_dir, bak_name, N):
     labels_df = pd.DataFrame([labels])
 
     # Concatenazione: prima riga descrizioni, poi dati veri
-    final_df = pd.concat([labels_df, output_df], ignore_index=True)
+    #final_df = pd.concat([labels_df, output_df], ignore_index=True)
 
     # Salvataggio in csv
-    final_df.to_csv('data_at_fragmentation_total.csv', index=False)
+    #final_df.to_csv('data_at_fragmentation_total.csv', index=False,  header=False, encoding="utf-8")
+    columns_row = output_df.columns.tolist()
+    labels_row = [labels.get(col, col) for col in columns_row]
+
+    with open('data_at_fragmentation_total.csv', 'w', encoding='utf-8', newline='') as f:
+        f.write(','.join(columns_row) + '\n')
+        f.write(','.join(labels_row) + '\n')
+        output_df.to_csv(f, index=False, header=False)
+
+
     print("\nEstrazione completata. Dati salvati in 'data_at_fragmentation_total.csv'.")
 
     # Rimuoviamo le simulazini nulle

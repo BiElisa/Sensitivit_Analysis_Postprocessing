@@ -461,20 +461,6 @@ def get_xi_labels_from_template(df, template_file):
 
     return xi_labels
 
-def fix_headers(df):
-    # prendi la prima riga come seconda intestazione
-    second_header = df.iloc[0].apply(lambda x: str(x) if pd.notnull(x) else "")
-
-    # costruisci MultiIndex (colonna_originale, etichetta_secondaria)
-    new_columns = pd.MultiIndex.from_arrays([df.columns, second_header])
-
-    # rimuovi la prima riga dai dati
-    df_fixed = df.iloc[1:].copy().reset_index(drop=True)
-    df_fixed.columns = new_columns
-
-    return df_fixed
-
-
 def transform_units_of_variables(df):
     """
     Applica trasformazioni di unità di misura al DataFrame in base

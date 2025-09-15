@@ -108,28 +108,28 @@ def extract_allData (verbose = True, pause = True):
             'response_fn_13': 'Volume flow rate [m3/s]',
             'response_fn_14': 'Fragmentation Code',
             'response_fn_15': 'Fragmentation depth [m]',
-            "response_fn_16": "Total crystal content [vol.%]",
-            "response_fn_17": "Undercooling relative to plag [K]",
-            "response_fn_18": "Viscosity at fragmentation [Pa·s]",
-            "response_fn_19": "Fragmentation length scale [m]",
+            'response_fn_16': 'Total crystal content [vol.%]',
+            'response_fn_17': 'Undercooling relative to plag [K]',
+            'response_fn_18': 'Viscosity at fragmentation [Pa·s]',
+            'response_fn_19': 'Fragmentation length scale [m]',
         }
 
         # Costruisci seconda riga di etichette
         labels_row = []
-        for col in df_dakota_output.columns:
+        for col in df_dakota_clean.columns:
             if col in xi_labels:
-                labels_row.append(xi_labels[col])
+                labels_row.append(str(xi_labels[col]))
             elif col in response_labels:
-                labels_row.append(response_labels[col])
+                labels_row.append(str(response_labels[col]))
             else:
-                labels_row.append(col)
+                labels_row.append(str(col))
 
         # Salva con doppia intestazione
         filename_with_labels = "simulations.csv"
-        with open(filename_with_labels, "w") as f:
+        with open(filename_with_labels, "w", encoding="utf-8", newline='') as f:
             f.write(",".join(df_dakota_clean.columns) + "\n")
             f.write(",".join(labels_row) + "\n")
-            df_dakota_clean.to_csv(f, index=False, header=False)
+            df_dakota_clean.to_csv(f, index=False, header=False, encoding="utf-8")
 
         #endregion
         
