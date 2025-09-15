@@ -24,7 +24,7 @@ def extract_allData (verbose = True, pause = True):
         print("Nessun file selezionato. Operazione annullata.")
     else:
 
-        #region -- Importiamo il tabellne generato da Dakota --
+        #region -- Importiamo il tabellone generato da Dakota --
         # Trova la cartella principale risalendo dal percorso del file selezionato
         # Ad esempio, da '.../workdir.1/file.bak' si ottiene '...'
         main_dir = os.path.dirname(os.path.dirname(filepath))
@@ -78,16 +78,23 @@ def extract_allData (verbose = True, pause = True):
         #region -- Aggiungiamo una seconda riga al tabellone per avere labels leggibili --
         
         # Trova tutte le colonne che iniziano con 'x'
-        xi_cols = [col for col in df_dakota_output.columns if col.startswith('x')]
-        n_xi = len(xi_cols)
         if verbose:
-            print(f"Trovate {n_xi} variabili di input xi: {xi_cols}")
+            xi_cols = [col for col in df_dakota_output.columns if col.startswith('x')]
+            n_xi = len(xi_cols)
+            if verbose:
+                print(f"Trovate {n_xi} variabili di input xi: {xi_cols}")
 
-        # Converti dinamicamente in array numpy
-        xi_arrays = {col: df_dakota_output[col].to_numpy() for col in xi_cols}
+        if not os.path.exists("conduit_solver.template"):
+            print("Abort: The file 'conduit_solver.template' is not in the folder.")
+            sys.exit(1)
 
-        xi_labels, xi_transforms, input_Min, input_Max = utils.get_xi_labels_from_template(df_dakota_output, "conduit_solver.template")
-        #print(xi_labels)
+        xi_labels = utils.get_xi_labels_from_template(
+            df_dakota_output, 
+            "conduit_solver.template",
+            transform = False
+            )
+        if verbose:
+            print(f"xi_labels = \n{xi_labels}")
 
         response_labels = {
             'response_fn_1': 'Total Gas volume fraction',
