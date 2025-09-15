@@ -333,6 +333,58 @@ def import_dakota_bounds():
     
     return df, input_Min, input_Max
 
+def adjust_bounds_with_units(input_Min, input_Max, df):
+    """
+    Applica le stesse trasformazioni delle colonne df ai limiti input_Min e input_Max.
+
+    Parameters
+    ----------
+    input_Min : list of float
+        Valori minimi originali delle xi (in unità del file Dakota).
+    input_Max : list of float
+        Valori massimi originali delle xi.
+    df : pandas.DataFrame
+        DataFrame trasformato con MultiIndex nelle colonne.
+        Serve per leggere le unità correnti (seconda riga di intestazione).
+
+    Returns
+    -------
+    adj_Min, adj_Max : list of float
+        Liste di limiti trasformati, coerenti con i dati di df.
+    """
+
+    adj_Min, adj_Max = [], []
+
+    for i, (low, high) in enumerate(zip(input_Min, input_Max)):
+        # Trova il nome colonna corrispondente (es. 'x1', 'x2'...)
+        col = f"x{i+1}"
+        if col not in df.columns.get_level_values(0):
+            # se non è presente, lascia invariato
+            adj_Min.append(low)
+            adj_Max.append(high)
+            continue
+
+        # prendi la label descrittiva con unità
+        label = df.loc[:, col].columns[0]  # seconda riga (unità)
+
+        if "[Pa]" in label:
+            adj_Min.append(low / 1e6)
+            adj_Max.append(high / 1e6)
+        elif "[K]" in label:
+            adj_Min.append(low - 273)
+            adj_Max.append(high - 273)
+        elif "[vol.]" in label:
+            adj_Min.append(low * 100)
+            adj_Max.append(high * 100)
+        elif "[wt.]" in label:
+            adj_Min.append(low * 100)
+            adj_Max.append(high * 100)
+        else:
+            adj_Min.append(low)
+            adj_Max.append(high)
+
+    return adj_Min, adj_Max
+
 def read_csv_with_labels(path):
     """
     Legge un CSV che può avere:
@@ -487,11 +539,6 @@ def transform_units_of_variables(df):
     df : pd.DataFrame
         DataFrame con colonne trasformate e unità aggiornate.
     """
-
-    # Se le colonne NON sono MultiIndex → fix_headers
-    if not isinstance(df.columns, pd.MultiIndex):
-        df = fix_headers(df)
-
     df = df.copy()
 
     new_columns = []
@@ -518,11 +565,9 @@ def transform_units_of_variables(df):
     return df
 
 def plot_xi_vs_response_fn( 
-        xi_labels, 
-        xi_transforms, 
-        input_Min, 
-        input_Max, 
         df, 
+        input_Min,
+        input_Max,
         response_col, 
         y_label=None, 
         n_step=1,
@@ -534,16 +579,13 @@ def plot_xi_vs_response_fn(
 
     Parameters
     ----------
-    xi_labels : dict
-        Dizionario {xi: label}
-    xi_transforms : dict
-        Dizionario {xi: funzione di trasformazione}
-    input_Min : np.array
-        Valori minimi delle xi
-    input_Max : np.array
-        Valori massimi delle xi
     df : pandas.DataFrame
-        DataFrame con tutte le colonne xi e la colonna di risposta.
+        DataFrame con MultiIndex (nome tecnico, label descrittiva)
+        con tutte le colonne {xi} e le colonne di risposta {response_fn_i}.
+    input_Min : list of float
+        Valori minimi (già trasformati) delle xi.
+    input_Max : list of float
+        Valori massimi (già trasformati) delle xi.
     response_col : str
         Nome della colonna di risposta da plottare (es. 'response_fn_1').
     y_label : str, optional
@@ -557,10 +599,26 @@ def plot_xi_vs_response_fn(
     """
 
     # Trova tutte le xi presenti nel DataFrame
-    xi_cols = [col for col in df.columns if col.startswith('x')]
+    xi_cols = [col for col in df.columns if col[0].startswith('x')]
     n_xi = len(xi_cols)
 
+    # Trova la colonna corrispondente nel MultiIndex
+    matches = [col for col in df.columns if col[0] == response_col]
+    if not matches:
+        raise ValueError(f"La colonna '{response_col}' non è stata trovata nel DataFrame.")
+    if len(matches) > 1:
+        print(f"Attenzione: trovate più colonne per '{response_col}', uso la prima.")
+    response_tuple = matches[0]  # (response_fn_x, label descrittiva)
+
     y_label = y_label or response_col
+
+    # Estrai le label dal secondo livello del MultiIndex se presente
+    xi_labels = {}
+    for col in xi_cols:
+        if isinstance(df.columns, pd.MultiIndex):
+            xi_labels[col] = df.columns.get_level_values(1)[df.columns.get_loc(col)]
+        else:
+            xi_labels[col] = col
 
     # Layout subplot dinamico
     n_cols = min(3, n_xi)
@@ -570,16 +628,13 @@ def plot_xi_vs_response_fn(
     axes = axes.flatten() if n_xi > 1 else [axes]
 
     for i, xi in enumerate(xi_cols):
-        x_values = xi_transforms[xi](df[xi].to_numpy())[::n_step]  # Applica la trasformazione
+        x_values =df[xi].to_numpy()[::n_step] 
         y_values = df[response_col].to_numpy()[::n_step]
 
-        # Limiti trasformati
-        xlim_min = xi_transforms[xi](input_Min[i])
-        xlim_max = xi_transforms[xi](input_Max[i])
 
         axes[i].plot(x_values, y_values, 'rs', markerfacecolor='r', markersize=2)
-        axes[i].set_xlim(xlim_min, xlim_max)
-        axes[i].set_xlabel(xi_labels[xi])
+        axes[i].set_xlim(input_Min[i], input_Max[i])
+        axes[i].set_xlabel(xi_labels[xi][1])
         axes[i].set_ylabel(y_label)
 
         # Mostra numeri sugli assi e tick automatici
@@ -593,17 +648,11 @@ def plot_xi_vs_response_fn(
 
     plt.tight_layout()
 
-
     # -- Salvataggio automatico ---
     save_dir = "plot_correlations"
     os.makedirs(save_dir, exist_ok=True)
 
-    if save_name:
-        save_label = save_name
-    else:
-        save_label = (y_label if y_label else response_col)
-
-    save_label = save_label.replace(" ", "_")
+    save_label = save_name or y_label.replace(" ", "_")
     save_path = os.path.join(save_dir, f"{save_label}.png")
 
     plt.savefig(save_path, dpi=300)
@@ -701,7 +750,7 @@ def plot_x_fixed_yi_change(
     x_col,
     input_Min,
     input_Max,
-    response_defs,
+    response_cols,
     n_step=1,
     fig_num=None,
     save_name=None
@@ -718,7 +767,7 @@ def plot_x_fixed_yi_change(
         Input variable for the horizontal axis.
     input_Min, input_Max : np.array
         Min/max bounds for xi (used for plotting limits).
-    response_defs : list of tuples
+    response_cols : list of tuples
         Each tuple: (response_col, transform_fn_or_None, ylabel).
     n_step : int
         Sampling step for speed.
@@ -727,8 +776,8 @@ def plot_x_fixed_yi_change(
     save_name : str, optional
         Base name for saving. Saves into 'plot_correlations/' if provided.
     """
-    num_plots = len(response_defs)
-    n_cols = int(math.sqrt(num_plots)) + 1
+    num_plots = len(response_cols)
+    n_cols = int(math.sqrt(num_plots)) + 1 # oppure : min(3, num_plots)
     n_rows = math.ceil(num_plots / n_cols)
 
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(5*n_cols, 4*n_rows), num=fig_num)
@@ -736,17 +785,48 @@ def plot_x_fixed_yi_change(
 
     xi_index = int(x_col[1:]) - 1  # x4 → index 3
     x_vals = df[x_col].to_numpy()[::n_step]
+    
     x_min = input_Min[xi_index]
     x_max = input_Max[xi_index]
 
-    for ax, (resp_col, transform, y_label) in zip(axes, response_defs):
-        y = df[resp_col].to_numpy()[::n_step]
-        y = transform(y) if transform else y
+    for ax, (resp_col, transform, y_label_custom) in zip(axes, response_cols):
+        # Controlliamo che df sia multiIndice
+        if isinstance(df.columns, pd.MultiIndex):
+            matches = df.columns[df.columns.get_level_values(0) == resp_col]
+            if len(matches) == 0:
+                raise KeyError(
+                    f"Colonna {resp_col} non trovata. Disponibili: {set(df.columns.get_level_values(0))}"
+                )
+            col_tuple = matches[0]  # colonna completa
+            y = df[col_tuple].to_numpy()[::n_step]
+        else:
+            if resp_col not in df.columns:
+                raise KeyError(f"Colonna {resp_col} non trovata. Disponibili: {set(df.columns)}")
+            y = df[resp_col].to_numpy()[::n_step]
+        
+        # Applica la trasformazione se presente
+        if transform:
+            y = transform(y)
 
         ax.plot(x_vals, y, 'rs', markerfacecolor='r', markersize=2)
         ax.set_xlim(x_min, x_max)
         ax.set_xlabel(x_col)
         ax.set_ylabel(y_label)
+        ax.tick_params(axis='both', which='major', labelsize=9)
+        ax.grid(True)
+
+        # Estrai valori
+        y_vals = df[(resp_col, resp_label)].to_numpy()[::n_step]
+        if transform:
+            y_vals = transform(y_vals)
+
+        # Etichetta asse Y: se hai passato un custom lo usa, altrimenti usa il label del file
+        ylabel = y_label_custom or resp_label
+
+        ax.plot(x_vals, y_vals, 'rs', markerfacecolor='r', markersize=2)
+        ax.set_xlim(x_min, x_max)
+        ax.set_xlabel(df.columns.get_level_values(1)[df.columns.get_level_values(0) == x_col][0])
+        ax.set_ylabel(ylabel)
         ax.tick_params(axis='both', which='major', labelsize=9)
         ax.grid(True)
 

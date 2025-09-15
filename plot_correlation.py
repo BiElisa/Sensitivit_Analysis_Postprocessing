@@ -57,8 +57,16 @@ if __name__ == '__main__':
     df_concat = pd.concat([df_dakota_output, df_fragmentation, df_inlet, df_vent, df_average], axis=1)
 
     df_transformed = utils.transform_units_of_variables(df_concat)
+    #print(df_transformed)
 
     #endregion
+
+    df_boundsInfo, input_Min, input_Max = utils.import_dakota_bounds()
+
+    # Applica le stesse trasformazioni delle colonne di df_transformed
+    adj_input_Min, adj_input_Max = utils.adjust_bounds_with_units(input_Min, input_Max, df_concat)
+    print(adj_input_Min)
+    print(adj_input_Max)
 
     #region -- Plot di correlazione fra una response_fn e tutti i parametri di input
 
@@ -66,10 +74,9 @@ if __name__ == '__main__':
     num_step_campionamento = 3
 
     utils.plot_xi_vs_response_fn(
-        xi_labels=xi_labels,
-        input_Min=input_Min,
-        input_Max=input_Max,
-        df = df_concat,
+        df = df_transformed,
+        input_Min=adj_input_Min,
+        input_Max=adj_input_Max,
         response_col='response_fn_1',
         y_label='Gas volume fraction',
         n_step=num_step_campionamento,  # campiona ogni tot valori per velocizzare il plot
@@ -78,55 +85,52 @@ if __name__ == '__main__':
     )
 
     utils.plot_xi_vs_response_fn(
-        xi_labels=xi_labels,
-        input_Min=input_Min,
-        input_Max=input_Max,
-        df = df_concat,
+        df = df_transformed,
+        input_Min=adj_input_Min,
+        input_Max=adj_input_Max,
         response_col='response_fn_15',
         y_label='Fragmentation depth (m)',
-        n_step=num_step_campionamento, 
+        n_step=num_step_campionamento,  # campiona ogni tot valori per velocizzare il plot
         save_name="plot_correlazione_Fragmentation_depth",
         fig_num=2
     )
 
     utils.plot_xi_vs_response_fn(
-        xi_labels=xi_labels,
-        input_Min=input_Min,
-        input_Max=input_Max,
-        df = df_concat,
+        df = df_transformed,
+        input_Min=adj_input_Min,
+        input_Max=adj_input_Max,
         response_col='response_fn_12',
         y_label='Mass flow rate (kg/s)',
-        n_step=num_step_campionamento,  
+        n_step=num_step_campionamento,  # campiona ogni tot valori per velocizzare il plot
         save_name="plot_correlazione_Mass_flow_rate",
         fig_num=3
     )
 
     utils.plot_xi_vs_response_fn(
-        xi_labels=xi_labels,
-        input_Min=input_Min,
-        input_Max=input_Max,
-        df = df_concat,
+        df = df_transformed,
+        input_Min=adj_input_Min,
+        input_Max=adj_input_Max,
         response_col='response_fn_4',
         y_label='Exit velocity (m/s)',
-        n_step=num_step_campionamento,  
+        n_step=num_step_campionamento,  # campiona ogni tot valori per velocizzare il plot
         save_name="plot_correlazione_Exit_velocity",
         fig_num=4
     )
 
     # Crea colonna temporanea con valori moltiplicati per 100
-    df_concat["response_fn_16_scaled"] = df_concat["response_fn_16"] * 100
+    df_transformed["response_fn_16_scaled"] = df_transformed["response_fn_16"] * 100
 
     utils.plot_xi_vs_response_fn(
-        xi_labels=xi_labels,
-        input_Min=input_Min,
-        input_Max=input_Max,
-        df = df_concat,
+        df = df_transformed,
+        input_Min=adj_input_Min,
+        input_Max=adj_input_Max,
         response_col='response_fn_16_scaled',
         y_label='Exit crystal content (vol.%)',
         n_step=num_step_campionamento,  
         save_name="plot_correlazione_Exit_crystal_content",
         fig_num=5
     )
+
     """
     utils.plot_xi_vs_response_fn(
         xi_labels=xi_labels,
@@ -155,11 +159,11 @@ if __name__ == '__main__':
     ]
 
     utils.plot_x_fixed_yi_change(
-        df=df_concat,
-        x_col="x4",
-        input_Min=input_Min,
-        input_Max=input_Max,
-        response_defs=response_defs,
+        df=df_transformed,
+        x_col='x4',
+        input_Min=adj_input_Min,
+        input_Max=adj_input_Max,
+        response_cols=response_defs,
         n_step=3,
         fig_num=11,
         save_name="plot_correlazioni_H2O"
