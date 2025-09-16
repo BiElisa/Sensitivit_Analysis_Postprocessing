@@ -58,6 +58,8 @@ if __name__ == '__main__':
 
     df_transformed = utils.transform_units_of_variables(df_concat)
     #print(df_transformed)
+    df_transformed.to_csv('data_transformed.csv', index=False)
+    input('...')
 
     #endregion
 
@@ -150,12 +152,12 @@ if __name__ == '__main__':
 
     # Prepariamo la lista delle variabili da plottare sulle 'y'
     response_defs = [
-        ("response_fn_4",  None,            "Exit velocity (m/s)"),
-        ("response_fn_15", None,            "Fragmentation depth (m)"),
-        ("response_fn_30", lambda y: y*100, "Diss. H₂O content @Frag (wt.%)"),
-        ("response_fn_25", lambda y: y-273, "Temperature @Frag (°C)"),
-        ("response_fn_24", lambda y: y*100, "Crystal content @Frag (vol.%)"),
-        ("response_fn_20", np.log10,        "Log10(viscosity) @Frag"),
+        ("response_fn_4",  "Exit velocity (m/s)"),
+        ("response_fn_15", "Fragmentation depth (m)"),
+        ("response_fn_30", "Diss. H₂O content @Frag (wt.%)"),
+        ("response_fn_25", "Temperature @Frag (°C)"),
+        ("response_fn_24", "Crystal content @Frag (vol.%)"),
+        ("response_fn_20", np.log10, "Log10(viscosity) @Frag"),
     ]
 
     utils.plot_x_fixed_yi_change(

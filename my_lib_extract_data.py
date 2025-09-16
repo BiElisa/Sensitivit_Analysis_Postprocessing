@@ -276,21 +276,21 @@ def extract_data_at_frag(main_dir, bak_name, N):
 
     # Dizionario con le descrizioni leggibili
     labels = {
-        'response_fn_20': "Viscosity at fragmentation",
+        'response_fn_20': "Viscosity at fragmentation [Pa s]",
         'response_fn_21': "Fraz. cry_1 at fragmentation",
         'response_fn_22': "Fraz. cry_2 at fragmentation",
         'response_fn_23': "Fraz. cry_3 at fragmentation",
-        'response_fn_24': "Total cry. at fragmentation",
-        'response_fn_25': "Temperature at fragmentation",
-        'response_fn_26': "Pressure at fragmentation",
-        'response_fn_27': "Vesicularity at fragmentation",
-        'response_fn_30': "Gas_1 diss. at fragmentation",
-        'response_fn_31': "Gas_2 diss. at fragmentation",
-        'response_fn_32': "Elongational strain rate at frag",
+        'response_fn_24': "Total cry. at fragmentation [wt.]",
+        'response_fn_25': "Temperature at fragmentation [K]",
+        'response_fn_26': "Pressure at fragmentation [Pa]",
+        'response_fn_27': "Vesicularity at fragmentation [vol.]",
+        'response_fn_30': "Gas_1 diss. at fragmentation [wt.]",
+        'response_fn_31': "Gas_2 diss. at fragmentation [wt.]",
+        'response_fn_32': "Elongational strain rate at frag [1/s]",
         'response_fn_33': "Deborah number at fragmentation",
         'response_fn_34': "Reynolds bubble expansion at frag",
         'response_fn_35': "Deborah/Reynolds ratio at frag",
-        'response_fn_36': "Melt viscosity at fragmentation",
+        'response_fn_36': "Melt viscosity at fragmentation [Pa s]",
         'response_fn_37': "Reynolds number at fragmentation",
         'response_fn_38': "u_mix / u_rel at fragmentation"
     }
@@ -298,24 +298,11 @@ def extract_data_at_frag(main_dir, bak_name, N):
     # Creiamo un DataFrame con una sola riga contenente le descrizioni
     labels_df = pd.DataFrame([labels])
 
-# O questo: -------------
-
     # Concatenazione: prima riga descrizioni, poi dati veri
     final_df = pd.concat([labels_df, output_df], ignore_index=True)
 
     # Salvataggio in csv
-    final_df.to_csv('data_at_fragmentation_total.csv', index=False,  header=False, encoding="utf-8")
-
-# O questo: ------------
-    #columns_row = output_df.columns.tolist()
-    #labels_row = [labels.get(col, col) for col in columns_row]
-
-    #with open('data_at_fragmentation_total.csv', 'w', encoding='utf-8', newline='') as f:
-    #    f.write(','.join(columns_row) + '\n')
-    #    f.write(','.join(labels_row) + '\n')
-    #    output_df.to_csv(f, index=False, header=False)
-
-# --------------------------------
+    final_df.to_csv('data_at_fragmentation_total.csv', index=False, encoding="utf-8")
 
     print("\nEstrazione completata. Dati salvati in 'data_at_fragmentation_total.csv'.")
 
@@ -428,16 +415,16 @@ def extract_data_at_inlet(main_dir, bak_name, N):
 
     # Dizionario con le descrizioni leggibili
     labels = {
-        'response_fn_40': 'Viscosity at inlet',
+        'response_fn_40': 'Viscosity at inlet [Pa s]',
         'response_fn_41': 'Fraz. cry_1 at inlet',
         'response_fn_42': 'Fraz. cry_2 at inlet',
         'response_fn_43': 'Fraz. cry_3 at inlet',
-        'response_fn_44': 'Total cry. fract. at inlet',
-        'response_fn_45': 'Gas_1 exs. at inlet',
-        'response_fn_46': 'Gas_2 exs. at inlet',
-        'response_fn_47': 'Gas_1 diss. at inlet',
-        'response_fn_48': 'Gas_2 diss. at inlet',
-        'response_fn_49': 'u_1 at inlet'
+        'response_fn_44': 'Total cry. fract. at inlet [wt.]',
+        'response_fn_45': 'Gas_1 exs. at inlet [vol.]',
+        'response_fn_46': 'Gas_2 exs. at inlet [vol.]',
+        'response_fn_47': 'Gas_1 diss. at inlet [wt.]',
+        'response_fn_48': 'Gas_2 diss. at inlet [wt.]',
+        'response_fn_49': 'u_1 at inlet [m/s]'
     }
 
     # Creiamo un DataFrame con una sola riga contenente le descrizioni
@@ -616,17 +603,17 @@ def extract_data_at_vent (main_dir, bak_name, N):
 
     # Dizionario con le descrizioni leggibili
     labels = {
-        'response_fn_50': 'Viscosity at vent',
+        'response_fn_50': 'Viscosity at vent [Pa s]',
         'response_fn_51': 'Fraz. crystal 1 at vent',
         'response_fn_52': 'Fraz. crystal 2 at vent',
         'response_fn_53': 'Fraz. crystal 3 at vent',
-        'response_fn_54': 'Total cry. fract. at vent',
-        'response_fn_55': 'Gas_1 exs. fraction at vent',
-        'response_fn_56': 'Gas_1 exs. fraction at vent',
-        'response_fn_57': 'Dissolved gas_1 fraction at vent',
-        'response_fn_58': 'Dissolved gas_2 fraction at vent',
+        'response_fn_54': 'Total cry. fract. at vent [wt.]',
+        'response_fn_55': 'Gas_1 exs. fraction at vent [vol.]',
+        'response_fn_56': 'Gas_1 exs. fraction at vent [vol.]',
+        'response_fn_57': 'Dissolved gas_1 fraction at vent [wt.]',
+        'response_fn_58': 'Dissolved gas_2 fraction at vent [wt.]',
         'response_fn_59': 'Fluid breakup flag at vent',
-        'response_fn_60': 'Filament breakup diameter at vent'
+        'response_fn_60': 'Filament breakup diameter at vent' # m? mm?
     }
 
     # Creiamo un DataFrame con una sola riga contenente le descrizioni
@@ -778,12 +765,12 @@ def extract_data_average (main_dir, bak_name, N):
 
     # Dizionario con le descrizioni leggibili
     labels = {
-        'response_fn_70': 'Average magma velocity',
-        'response_fn_71': 'Average mixture density',
-        'response_fn_72': 'Average viscosity',
+        'response_fn_70': 'Average magma velocity [m/s]',
+        'response_fn_71': 'Average mixture density [kq/m3]',
+        'response_fn_72': 'Average viscosity [Pa s]',
         'response_fn_73': 'Average Reynolds number',
-        'response_fn_74': 'Average cooling rate',
-        'response_fn_75': 'Average decompression rate'
+        'response_fn_74': 'Average cooling rate [K/s]',
+        'response_fn_75': 'Average decompression rate [MPa/s]'
     }
 
     # Creiamo un DataFrame con una sola riga contenente le descrizioni
