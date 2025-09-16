@@ -329,7 +329,7 @@ def import_dakota_bounds():
     
     print("Bounds trovati:")
     print(df)
-    print(f'input_Min = {input_Min}, \ninput_Max = {input_Max}')
+    print(f'\ninput_Min = {input_Min}, \ninput_Max = {input_Max}')
     
     return df, input_Min, input_Max
 
@@ -598,6 +598,7 @@ def plot_xi_vs_response_fn(
         Numero della figura (per creare più finestre distinte).
     """
 
+
     # Trova tutte le xi presenti nel DataFrame
     xi_cols = [col for col in df.columns if col[0].startswith('x')]
     n_xi = len(xi_cols)
@@ -610,7 +611,7 @@ def plot_xi_vs_response_fn(
         print(f"Attenzione: trovate più colonne per '{response_col}', uso la prima.")
     response_tuple = matches[0]  # (response_fn_x, label descrittiva)
 
-    y_label = y_label or response_col
+    y_label = y_label or response_tuple[1] # response_col
 
     # Estrai le label dal secondo livello del MultiIndex se presente
     xi_labels = {}
@@ -634,7 +635,7 @@ def plot_xi_vs_response_fn(
 
         axes[i].plot(x_values, y_values, 'rs', markerfacecolor='r', markersize=2)
         axes[i].set_xlim(input_Min[i], input_Max[i])
-        axes[i].set_xlabel(xi_labels[xi][1])
+        axes[i].set_xlabel(xi_labels[xi])
         axes[i].set_ylabel(y_label)
 
         # Mostra numeri sugli assi e tick automatici
@@ -659,188 +660,125 @@ def plot_xi_vs_response_fn(
     print(f"Figura salvata in {save_path}")
 
     # Mostra senza bloccare
-    plt.show(block=False)
-    plt.pause(0.1)
+    #plt.show(block=True)
+    #plt.pause(0.1)
 
-def plot_multiple_y_vs_single_x(
-    df, 
-    x_col, 
-    y_cols, 
-    xi_labels,
-    xi_transforms,
-    y_labels, 
-    x_transform=None, 
-    y_transforms=None, 
-    n_step=1,
-    save_name=None, 
-    fig_num=None
-):
-    """
-    Plotta più colonne Y vs un'unica colonna X in subplot.
-    
-    Parameters
-    ----------
-    df : pd.DataFrame
-        DataFrame contenente le colonne X e Y
-    x_col : str
-        Nome della colonna da usare come asse X
-    y_cols : list of str
-        Lista di colonne da plottare come Y
-    y_labels : list of str
-        Etichette da mettere sugli assi Y
-    x_transform : callable, optional
-        Funzione di trasformazione da applicare a X (es. lambda x: x*100)
-    y_transforms : list of callable, optional
-        Lista di funzioni da applicare alle colonne Y
-    n_step : int
-        Campionamento per velocizzare il plot
-    save_name : str, optional
-        Nome del file da salvare
-    fig_num : int, optional
-        Numero della figura
-    """
-
-    import math
-    import matplotlib.pyplot as plt
-    import os
-
-    n_plots = len(y_cols)
-    n_cols = min(3, n_plots)
-    n_rows = math.ceil(n_plots / n_cols)
-
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(5*n_cols, 4*n_rows), num=fig_num)
-    axes = axes.flatten() if n_plots > 1 else [axes]
-
-    x_vals = df[x_col].to_numpy()[::n_step]
-    if x_transform:
-        x_vals = x_transform(x_vals)
-
-    if y_transforms is None:
-        y_transforms = [lambda y: y]*n_plots
-
-    for i, (y_col, y_label, y_trans) in enumerate(zip(y_cols, y_labels, y_transforms)):
-        y_vals = y_trans(df[y_col].to_numpy()[::n_step])
-        axes[i].plot(x_vals, y_vals, 'rs', markerfacecolor='r', markersize=2)
-        axes[i].set_xlabel('H2O content (wt.%)')
-        axes[i].set_ylabel(y_label)
-        axes[i].xaxis.set_major_locator(plt.MaxNLocator(nbins=6))
-        axes[i].yaxis.set_major_locator(plt.MaxNLocator(nbins=6))
-        axes[i].tick_params(axis='both', which='major', labelsize=10)
-        axes[i].grid(True)
-
-    # Nascondi eventuali subplot vuoti
-    for j in range(i+1, n_rows*n_cols):
-        axes[j].axis('off')
-
-    plt.tight_layout()
-
-    # Salvataggio
-    if save_name:
-        save_dir = "plot_correlations"
-        os.makedirs(save_dir, exist_ok=True)
-        save_path = os.path.join(save_dir, f"{save_name}.png")
-        plt.savefig(save_path, dpi=300)
-        print(f"Plot saved in {save_dir} as {save_name}.png")
-
-    plt.show(block=False)
-    plt.pause(0.1)
-
-def plot_x_fixed_yi_change(
+def plot_lists(
     df,
-    x_col,
+    x_axis,
+    y_axis,
     input_Min,
     input_Max,
-    response_cols,
     n_step=1,
     fig_num=None,
     save_name=None
 ):
     """
-    General function to plot multiple response variables vs a fixed input variable.
-    Layout adjusts automatically based on number of plots.
+    Plotta coppie di variabili prese da due liste (x_axis[i], y_axis[i]).
 
     Parameters
     ----------
     df : pd.DataFrame
-        Contains `x_col` and response variables.
-    x_col : str
-        Input variable for the horizontal axis.
+        DataFrame con MultiIndex sulle colonne (level 0 = nome tecnico, level 1 = label).
+    x_axis, y_axis : list
+        Liste di tuple: (col_name, transform_or_factor, label) 
+        - col_name : str, es. 'x1' o 'response_fn_55'
+        - transform_or_factor : funzione, numero, o None
+        - label : str (opzionale)
     input_Min, input_Max : np.array
-        Min/max bounds for xi (used for plotting limits).
-    response_cols : list of tuples
-        Each tuple: (response_col, transform_fn_or_None, ylabel).
+        Limiti per le variabili x (se col_name inizia con 'x').
     n_step : int
-        Sampling step for speed.
-    fig_num : int, optional
-        If you want multiple figure windows.
-    save_name : str, optional
-        Base name for saving. Saves into 'plot_correlations/' if provided.
+        Passo di campionamento.
+    fig_num : int
+        Numero figura matplotlib.
+    save_name : str
+        Base name per salvare le figure.
     """
-    num_plots = len(response_cols)
-    n_cols = int(math.sqrt(num_plots)) + 1 # oppure : min(3, num_plots)
+    
+    if len(x_axis) != len(y_axis):
+        raise ValueError("Le liste x_axis e y_axis devono avere la stessa lunghezza.")
+
+    num_plots = len(x_axis)
+    n_cols = min(3, num_plots)
     n_rows = math.ceil(num_plots / n_cols)
 
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(5*n_cols, 4*n_rows), num=fig_num)
     axes = axes.flatten()
 
-    xi_index = int(x_col[1:]) - 1  # x4 → index 3
-    x_vals = df[x_col].to_numpy()[::n_step]
-    
-    x_min = input_Min[xi_index]
-    x_max = input_Max[xi_index]
+    for ax, x_entry, y_entry in zip(axes, x_axis, y_axis):
+        x_col, x_transform, x_label = parse_entry(x_entry)
+        y_col, y_transform, y_label = parse_entry(y_entry)
 
-    for ax, (resp_col, transform, y_label_custom) in zip(axes, response_cols):
-        # Controlliamo che df sia multiIndice
-        if isinstance(df.columns, pd.MultiIndex):
-            matches = df.columns[df.columns.get_level_values(0) == resp_col]
-            if len(matches) == 0:
-                raise KeyError(
-                    f"Colonna {resp_col} non trovata. Disponibili: {set(df.columns.get_level_values(0))}"
-                )
-            col_tuple = matches[0]  # colonna completa
-            y = df[col_tuple].to_numpy()[::n_step]
-        else:
-            if resp_col not in df.columns:
-                raise KeyError(f"Colonna {resp_col} non trovata. Disponibili: {set(df.columns)}")
-            y = df[resp_col].to_numpy()[::n_step]
-        
-        # Applica la trasformazione se presente
-        if transform:
-            y = transform(y)
+        # Prendi i dati
+        x_vals = df[x_col].to_numpy()[::n_step]
+        y_vals = df[y_col].to_numpy()[::n_step]
 
-        ax.plot(x_vals, y, 'rs', markerfacecolor='r', markersize=2)
-        ax.set_xlim(x_min, x_max)
-        ax.set_xlabel(x_col)
+        # Applica trasformazioni se definite
+        if x_transform:
+            x_vals = x_transform(x_vals)
+        if y_transform:
+            y_vals = y_transform(y_vals)
+
+        # Etichette sugli assi
+        if not x_label:
+            x_label = df.columns.get_level_values(1)[df.columns.get_level_values(0) == x_col][0]
+        if not y_label:
+            y_label = df.columns.get_level_values(1)[df.columns.get_level_values(0) == y_col][0]
+
+        ax.plot(x_vals, y_vals, "rs", markerfacecolor="r", markersize=2)
+        ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
-        ax.tick_params(axis='both', which='major', labelsize=9)
         ax.grid(True)
 
-        # Estrai valori
-        y_vals = df[(resp_col, resp_label)].to_numpy()[::n_step]
-        if transform:
-            y_vals = transform(y_vals)
-
-        # Etichetta asse Y: se hai passato un custom lo usa, altrimenti usa il label del file
-        ylabel = y_label_custom or resp_label
-
-        ax.plot(x_vals, y_vals, 'rs', markerfacecolor='r', markersize=2)
-        ax.set_xlim(x_min, x_max)
-        ax.set_xlabel(df.columns.get_level_values(1)[df.columns.get_level_values(0) == x_col][0])
-        ax.set_ylabel(ylabel)
-        ax.tick_params(axis='both', which='major', labelsize=9)
-        ax.grid(True)
-
+    # Spegni eventuali assi vuoti
     for ax in axes[num_plots:]:
-        ax.axis('off')
+        ax.axis("off")
 
     plt.tight_layout()
 
     if save_name:
-        save_dir = "plot_correlations"
-        os.makedirs(save_dir, exist_ok=True)
-        path = os.path.join(save_dir, f"{save_name}.png")
+        os.makedirs("plot_correlations", exist_ok=True)
+        path = os.path.join("plot_correlations", f"{save_name}.png")
         plt.savefig(path, dpi=300)
-        print(f"Saved plot at: {path}")
+        print(f"Salvata figura in {path}")
 
-    plt.show(block=False)
+    plt.show(block=True)
     plt.pause(0.1)
+
+def parse_entry(entry):
+
+    if isinstance(entry, str):
+        # Caso semplice: solo il nome colonna
+        return entry, None, None
+
+    elif isinstance(entry, tuple):
+        col_name = entry[0]
+        transform = entry[1] if len(entry) > 1 else None
+        label = entry[2] if len(entry) > 2 else None
+
+        # Caso: numero intero o float
+        if isinstance(transform, (int, float)):
+            if transform == 0:
+                fn = None
+            elif transform > 0:
+                # Moltiplicatore
+                fn = lambda v, f=transform: v * f
+            else:
+                # Offset additivo (es. -273)
+                fn = lambda v, o=transform: v + o
+
+        # Caso: funzione già definita (es. np.log10 o lambda custom)
+        elif callable(transform):
+            fn = transform
+
+        # Nessuna trasformazione
+        elif transform is None:
+            fn = None
+
+        else:
+            raise ValueError(f"Transform non valido: {transform}")
+
+        return col_name, fn, label
+
+    else:
+        raise ValueError(f"Entry non valido: {entry}")

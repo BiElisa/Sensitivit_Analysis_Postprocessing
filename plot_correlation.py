@@ -5,8 +5,6 @@ import os
 import sys
 import subprocess
 import my_lib_process_utils as utils
-import my_lib_remove_simulations_from_csv as rm
-import extract_allData
 
 if __name__ == '__main__':
     """
@@ -58,8 +56,7 @@ if __name__ == '__main__':
 
     df_transformed = utils.transform_units_of_variables(df_concat)
     #print(df_transformed)
-    df_transformed.to_csv('data_transformed.csv', index=False)
-    input('...')
+    df_transformed.to_csv('data_allConcat_unitsTransformed.csv', index=False)
 
     #endregion
 
@@ -67,8 +64,8 @@ if __name__ == '__main__':
 
     # Applica le stesse trasformazioni delle colonne di df_transformed
     adj_input_Min, adj_input_Max = utils.adjust_bounds_with_units(input_Min, input_Max, df_concat)
-    print(adj_input_Min)
-    print(adj_input_Max)
+    print(f'\nadj_input_Min = {adj_input_Min}')
+    print(f'adj_input_Max = {adj_input_Max}\n')
 
     #region -- Plot di correlazione fra una response_fn e tutti i parametri di input
 
@@ -81,7 +78,7 @@ if __name__ == '__main__':
         input_Max=adj_input_Max,
         response_col='response_fn_1',
         y_label='Gas volume fraction',
-        n_step=num_step_campionamento,  # campiona ogni tot valori per velocizzare il plot
+        n_step=num_step_campionamento, 
         save_name="plot_correlazione_Gas_volume_fraction",
         fig_num=1
     )
@@ -92,7 +89,7 @@ if __name__ == '__main__':
         input_Max=adj_input_Max,
         response_col='response_fn_15',
         y_label='Fragmentation depth (m)',
-        n_step=num_step_campionamento,  # campiona ogni tot valori per velocizzare il plot
+        n_step=num_step_campionamento,  
         save_name="plot_correlazione_Fragmentation_depth",
         fig_num=2
     )
@@ -103,7 +100,7 @@ if __name__ == '__main__':
         input_Max=adj_input_Max,
         response_col='response_fn_12',
         y_label='Mass flow rate (kg/s)',
-        n_step=num_step_campionamento,  # campiona ogni tot valori per velocizzare il plot
+        n_step=num_step_campionamento,  
         save_name="plot_correlazione_Mass_flow_rate",
         fig_num=3
     )
@@ -114,62 +111,51 @@ if __name__ == '__main__':
         input_Max=adj_input_Max,
         response_col='response_fn_4',
         y_label='Exit velocity (m/s)',
-        n_step=num_step_campionamento,  # campiona ogni tot valori per velocizzare il plot
+        n_step=num_step_campionamento,  
         save_name="plot_correlazione_Exit_velocity",
         fig_num=4
     )
-
-    # Crea colonna temporanea con valori moltiplicati per 100
-    df_transformed["response_fn_16_scaled"] = df_transformed["response_fn_16"] * 100
 
     utils.plot_xi_vs_response_fn(
         df = df_transformed,
         input_Min=adj_input_Min,
         input_Max=adj_input_Max,
-        response_col='response_fn_16_scaled',
+        response_col='response_fn_16',
         y_label='Exit crystal content (vol.%)',
         n_step=num_step_campionamento,  
         save_name="plot_correlazione_Exit_crystal_content",
         fig_num=5
     )
 
-    """
-    utils.plot_xi_vs_response_fn(
-        xi_labels=xi_labels,
-        xi_transforms=xi_transforms,
-        input_Min=input_Min,
-        input_Max=input_Max,
-        df = df_concat,
-        response_col='response_fn_28',
-        y_label='Undercooling @Frag (°C)',
-        n_step=num_step_campionamento,  
-        save_name="plot_correlazione_Undercooling_at_frag",
-        fig_num=6
-    )
-    """
-
     #endregion
 
-    # Prepariamo la lista delle variabili da plottare sulle 'y'
-    response_defs = [
-        ("response_fn_4",  "Exit velocity (m/s)"),
-        ("response_fn_15", "Fragmentation depth (m)"),
-        ("response_fn_30", "Diss. H₂O content @Frag (wt.%)"),
-        ("response_fn_25", "Temperature @Frag (°C)"),
-        ("response_fn_24", "Crystal content @Frag (vol.%)"),
-        ("response_fn_20", np.log10, "Log10(viscosity) @Frag"),
+    list_for_x_axis = [
+        ("x1", None, None),
+        ("x2", lambda v: v-273, "Temperatura (°C)"),
+        ("response_fn_17", None, "Undercooling [K]"),
+        ("x1", None, None),
+        ("x2", lambda v: v-273, "Temperatura (°C)"),
+        ("response_fn_17", None, "Undercooling [K]"),
     ]
 
-    utils.plot_x_fixed_yi_change(
+    list_for_y_axis = [
+        ("response_fn_55", lambda v: v*100, "H₂O Diss. (%)"),
+        ("x5", None, None),
+        ("response_fn_20", np.log10, "log10(Y)"),
+        ("response_fn_55", lambda v: v*100, "H₂O Diss. (%)"),
+        ("x5", None, None),
+        ("response_fn_20", np.log10, "log10(Y)"),
+    ]
+
+    utils.plot_lists(
         df=df_transformed,
-        x_col='x4',
+        x_axis=list_for_x_axis,
+        y_axis=list_for_y_axis,
         input_Min=adj_input_Min,
         input_Max=adj_input_Max,
-        response_cols=response_defs,
-        n_step=3,
-        fig_num=11,
-        save_name="plot_correlazioni_H2O"
+        n_step=1,
+        fig_num=6,
+        save_name="plot_correlazioni_varie"
     )
 
-
-
+    plt.show()
