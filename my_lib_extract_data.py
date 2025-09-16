@@ -4,7 +4,7 @@ import os
 import my_lib_process_utils as utils
 import my_lib_remove_simulations_from_csv as rm
 
-def extract_data_at_frag(main_dir, bak_name, N):
+def extract_data_at_frag(main_dir, bak_name, N, save_dir):
     """
     Estrae i dati da tutti i file .bak e .std contenuti nelle cartelle workdir.N.
     
@@ -13,16 +13,21 @@ def extract_data_at_frag(main_dir, bak_name, N):
         bak_name (str): Il nome del file .bak di riferimento (es. Piton_Emb2.bak).
     """
 
-    if os.path.exists('data_at_fragmentation_total.csv'):
-        print(f"'data_at_fragmentation_total.csv' esiste già")
+    filename_total = "data_at_fragmentation_total.csv"
+    filename_clean = "data_at_fragmentation.csv"
+
+    path_file_total = os.path.join(save_dir, filename_total)
+
+    if os.path.exists(filename_total):
+        print(f"'{filename_total}' esiste già")
         
-        if os.path.exists('data_at_fragmentation.csv'):
-            print("'data_at_fragmentation.csv' esiste già")
+        if os.path.exists(filename_clean):
+            print(f"'{filename_clean}' esiste già")
             print("La funzione extract_data_at_frag non verrà eseguita.")
             return
         
-        print("'data_at_fragmentation.csv' invece va creato")
-        rm.remove_null_simulations("data_at_fragmentation_total.csv", "data_at_fragmentation.csv")
+        print(f"'{filename_clean}' invece va creato")
+        rm.remove_null_simulations(filename_total, filename_clean, save_dir)
         return
 
     # 1. Inizializza i dizionari per i dati di risposta
@@ -302,15 +307,15 @@ def extract_data_at_frag(main_dir, bak_name, N):
     final_df = pd.concat([labels_df, output_df], ignore_index=True)
 
     # Salvataggio in csv
-    final_df.to_csv('data_at_fragmentation_total.csv', index=False, encoding="utf-8")
+    final_df.to_csv(path_file_total, index=False, encoding="utf-8")
 
-    print("\nEstrazione completata. Dati salvati in 'data_at_fragmentation_total.csv'.")
+    print(f"\nEstrazione completata. \nDati salvati in {save_dir}/{filename_total}.")
 
     # Rimuoviamo le simulazini nulle
-    rm.remove_null_simulations("data_at_fragmentation_total.csv", "data_at_fragmentation.csv")
+    rm.remove_null_simulations(filename_total, filename_clean, save_dir)
 
 
-def extract_data_at_inlet(main_dir, bak_name, N):
+def extract_data_at_inlet(main_dir, bak_name, N, save_dir):
     """
     Estrae i dati relativi all'inlet da tutti i file .bak e .std. nelle cartelle workdir.N.
 
@@ -319,18 +324,23 @@ def extract_data_at_inlet(main_dir, bak_name, N):
         bak_name (str): Il nome del file .bak di riferimento.
     """
 
-    # Controllo se il file esiste già
-    if os.path.exists('data_at_inlet_total.csv'):
-        print(f"'data_at_inlet_total.csv' esiste già")
+    filename_total = "data_at_inlet_total.csv"
+    filename_clean = "data_at_inlet.csv"
+
+    path_file_total = os.path.join(save_dir, filename_total)
+
+    if os.path.exists(filename_total):
+        print(f"'{filename_total}' esiste già")
         
-        if os.path.exists('data_at_inlet.csv'):
-            print("'data_at_inlet.csv' esiste già")
+        if os.path.exists(filename_clean):
+            print(f"'{filename_clean}' esiste già")
             print("La funzione extract_data_at_inlet non verrà eseguita.")
             return
         
-        print("'data_at_inlet.csv' invece va creato")
-        rm.remove_null_simulations("data_at_inlet_total.csv", "data_at_inlet.csv")
+        print(f"'{filename_clean}' invece va creato")
+        rm.remove_null_simulations(filename_total, filename_clean, save_dir)
         return
+
 
     # 1. Inizializza i dizionari per i dati di risposta
     response_data = {f'response_fn_{i}': np.full(N, np.nan) for i in range(40, 50)}
@@ -434,16 +444,16 @@ def extract_data_at_inlet(main_dir, bak_name, N):
     final_df = pd.concat([labels_df, output_df], ignore_index=True)
 
     # Salvataggio in csv
-    final_df.to_csv('data_at_inlet_total.csv', index=False)
+    final_df.to_csv(path_file_total, index=False, encoding="utf-8")
 
     #output_df.to_csv('data_at_inlet_total.csv', index=False)
-    print("\nEstrazione completata. Dati salvati in 'data_at_inlet_total.csv'.")
+    print(f"\nEstrazione completata. \nDati salvati in {save_dir}/{filename_total}.")
 
     # Rimuoviamo le simulazini nulle
-    rm.remove_null_simulations("data_at_inlet_total.csv", "data_at_inlet.csv")
+    rm.remove_null_simulations(filename_total, filename_clean, save_dir)
 
 
-def extract_data_at_vent (main_dir, bak_name, N):
+def extract_data_at_vent (main_dir, bak_name, N, save_dir):
     """
     Estrae i dati da tutti i file .bak e .std contenuti nelle cartelle workdir.N.
     
@@ -452,16 +462,21 @@ def extract_data_at_vent (main_dir, bak_name, N):
         bak_name (str): Il nome del file .bak di riferimento (es. Piton_Emb2.bak).
     """
     
-    if os.path.exists('data_at_vent_total.csv'):
-        print(f"'data_at_vent_total.csv' esiste già")
+    filename_total = "data_at_vent_total.csv"
+    filename_clean = "data_at_vent.csv"
+
+    path_file_total = os.path.join(save_dir, filename_total)
+
+    if os.path.exists(filename_total):
+        print(f"'{filename_total}' esiste già")
         
-        if os.path.exists('data_at_vent.csv'):
-            print("'data_at_vent.csv' esiste già")
+        if os.path.exists(filename_clean):
+            print(f"'{filename_clean}' esiste già")
             print("La funzione extract_data_at_vent non verrà eseguita.")
             return
         
-        print("'data_at_vent.csv' invece va creato")
-        rm.remove_null_simulations("data_at_vent_total.csv", "data_at_vent.csv")
+        print(f"'{filename_clean}' invece va creato")
+        rm.remove_null_simulations(filename_total, filename_clean, save_dir)
         return
 
     # 1. Inizializza i dizionari per i dati di risposta
@@ -622,16 +637,21 @@ def extract_data_at_vent (main_dir, bak_name, N):
     # Concatenazione: prima riga descrizioni, poi dati veri
     final_df = pd.concat([labels_df, output_df], ignore_index=True)
 
+    # Organizziamo per il salvataggio del file nella cartella
+    os.makedirs(save_dir, exist_ok=True)
+    filename = 'data_at_vent_total.csv'
+    save_path = os.path.join(save_dir, filename)
+
     # Salvataggio in csv
-    final_df.to_csv('data_at_vent_total.csv', index=False)
-    #output_df.to_csv('data_at_vent_total.csv', index=False)
-    print("\nEstrazione completata. Dati salvati in 'data_at_vent_total.csv'.")
+    final_df.to_csv(path_file_total, index=False, encoding="utf-8")
+
+    print(f"\nEstrazione completata. \nDati salvati in {save_dir}/{filename_total}.")
 
     # Rimuoviamo le simulazini nulle
-    rm.remove_null_simulations("data_at_vent_total.csv", "data_at_vent.csv")
+    rm.remove_null_simulations(filename_total, filename_clean, save_dir)
 
 
-def extract_data_average (main_dir, bak_name, N):
+def extract_data_average (main_dir, bak_name, N, save_dir):
     """
     Estrae i dati da tutti i file .bak e .std contenuti nelle cartelle workdir.N.
     
@@ -640,16 +660,21 @@ def extract_data_average (main_dir, bak_name, N):
         bak_name (str): Il nome del file .bak di riferimento (es. Piton_Emb2.bak).
     """
 
-    if os.path.exists('data_average_total.csv'):
-        print(f"'data_average_total.csv' esiste già")
+    filename_total = "data_average_total.csv"
+    filename_clean = "data_average.csv"
+
+    path_file_total = os.path.join(save_dir, filename_total)
+
+    if os.path.exists(filename_total):
+        print(f"'{filename_total}' esiste già")
         
-        if os.path.exists('data_average.csv'):
-            print("'data_average.csv' esiste già")
+        if os.path.exists(filename_clean):
+            print(f"'{filename_clean}' esiste già")
             print("La funzione extract_data_average non verrà eseguita.")
             return
         
-        print("'data_average.csv' invece va creato")
-        rm.remove_null_simulations("data_average_total.csv", "data_average.csv")
+        print(f"'{filename_clean}' invece va creato")
+        rm.remove_null_simulations(filename_total, filename_clean, save_dir)
         return
 
     # 1. Inizializza i dizionari per i dati di risposta
@@ -780,9 +805,9 @@ def extract_data_average (main_dir, bak_name, N):
     final_df = pd.concat([labels_df, output_df], ignore_index=True)
 
     # Salvataggio in csv
-    final_df.to_csv('data_average_total.csv', index=False)
-    #output_df.to_csv('data_average_total.csv', index=False)
-    print("\nEstrazione completata. Dati salvati in 'data_average_total.csv'.")
+    final_df.to_csv(path_file_total, index=False, encoding="utf-8")
+
+    print(f"\nEstrazione completata. \nDati salvati in {save_dir}/{filename_total}.")
 
     # Rimuoviamo le simulazini nulle
-    rm.remove_null_simulations("data_average_total.csv", "data_average.csv")
+    rm.remove_null_simulations(filename_total, filename_clean, save_dir)

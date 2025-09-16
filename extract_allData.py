@@ -20,6 +20,7 @@ def extract_allData (verbose = True, pause = True):
         filetypes=[("Bak files", "*.bak")]
     )
 
+
     if not filepath:
         print("Nessun file selezionato. Operazione annullata.")
     else:
@@ -124,9 +125,15 @@ def extract_allData (verbose = True, pause = True):
             else:
                 labels_row.append(str(col))
 
-        # Salva con doppia intestazione
+        # -- Salvataggio automatico CSV ---
+        save_dir = "csv_files"
+        os.makedirs(save_dir, exist_ok=True)
+
         filename_with_labels = "simulations.csv"
-        with open(filename_with_labels, "w", encoding="utf-8", newline='') as f:
+        save_path = os.path.join(save_dir, filename_with_labels)
+
+        # Salva con doppia intestazione
+        with open(save_path, "w", encoding="utf-8", newline='') as f:
             f.write(",".join(df_dakota_clean.columns) + "\n")
             f.write(",".join(labels_row) + "\n")
             df_dakota_clean.to_csv(f, index=False, header=False, encoding="utf-8")
@@ -134,25 +141,25 @@ def extract_allData (verbose = True, pause = True):
         #endregion
         
         if verbose:
-            print(f"I dati delle simulazioni avvenute con successo vengono salvati in {filename_with_labels}, dove ogni colonna ha doppia intestazione.")
+            print(f"I dati delle simulazioni avvenute con successo vengono salvati in {save_path},\ndove ogni colonna ha doppia intestazione.")
             print("Passiamo ad estrapolare maggiori informazioni da questi dati.")
 
         # Chiama le funzioni di estrazione, passando il percorso della cartella principale
         if pause:
             input("\nCerchiamo oppure creiamo le informazioni alla frammentazione...")
-        extract.extract_data_at_frag(main_dir, bak_name, N)
+        extract.extract_data_at_frag(main_dir, bak_name, N, save_dir)
         
         if pause:
             input("\nCerchiamo oppure creiamo le informazioni all'inlet...")
-        extract.extract_data_at_inlet(main_dir, bak_name, N)
+        extract.extract_data_at_inlet(main_dir, bak_name, N, save_dir)
         
         if pause:
             input("\nCerchiamo oppure creiamo le informazioni al vent...")
-        extract.extract_data_at_vent(main_dir, bak_name, N)
+        extract.extract_data_at_vent(main_dir, bak_name, N, save_dir)
 
         if pause:
             input("\nCerchiamo oppure creiamo le informazioni averaged...")
-        extract.extract_data_average(main_dir, bak_name, N)
+        extract.extract_data_average(main_dir, bak_name, N, save_dir)
 
 
 
