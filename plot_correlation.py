@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import sys
+import shutil
 import subprocess
 import my_lib_process_utils as utils
 
@@ -12,8 +13,9 @@ if __name__ == '__main__':
     """
     #region -- Controlliamo che i dati che ci servono siano presenti, altrimenti li andiamo a costruire
 
-    file_to_check = [
-        "dakota_test_parallel.in",
+    # File richiesti
+    mandatory_file = "dakota_test_parallel.in"
+    other_files = [
         "simulations.csv", 
         "data_at_fragmentation_total.csv",
         "data_at_fragmentation.csv",
@@ -25,38 +27,60 @@ if __name__ == '__main__':
         "data_average.csv"
     ]
 
-    missing = [f for f in file_to_check if not os.path.isfile(os.path.join(os.getcwd(),f))]
+    # Cartelle
+    cwd = os.getcwd()
+    save_dir = os.path.join(cwd, "csv_files")
+    os.makedirs(save_dir, exist_ok=True)
 
+    # --- Controllo mandatory ---
+    if not os.path.isfile(os.path.join(cwd, mandatory_file)):
+        print(f"Abort: The file '{mandatory_file}' is not in the folder {cwd}.")
+        sys.exit(1)
+
+    # --- Controllo altri file ---
+    missing = []
+    for f in other_files:
+        path_current = os.path.join(cwd, f)
+        path_csv = os.path.join(save_dir, f)
+
+        if os.path.isfile(path_current):
+            # Se il file è nella cartella corrente, spostalo in csv_files
+            shutil.move(path_current, path_csv)
+            print(f"Moved '{f}' from current folder to '{save_dir}'.")
+        elif not os.path.isfile(path_csv):
+            # Mancante ovunque
+            missing.append(f)
+
+    # --- Se mancano file, run extract_allData ---
     if missing:
-        if "dakota_test_parallel.in" in missing:
-            print("Abort: The file 'dakota_test_parallel.in' is not in the folder.")
-            sys.exit(1)
-
-        print("The following files are missing from the current folder:", missing)
+        print(f"The following files are missing from both current folder and '{save_dir}': {missing}")
         print("The script 'extract_allData.py' is executed.")
         subprocess.run(["python", "extract_allData.py", "--pause", "false"])
     
+
     #endregion
 
     #region -- Carichiamo tutti i file e dati che ci servono
 
     read_csv_kwargs = {"header": [0,1], "encoding": "utf-8"}
 
-    df_dakota_output = pd.read_csv("simulations.csv", **read_csv_kwargs)
+    save_dir = "csv_files"  
 
-    df_fragmentation = pd.read_csv("data_at_fragmentation.csv", **read_csv_kwargs)
+    df_dakota_output = pd.read_csv(os.path.join(save_dir,"simulations.csv"), **read_csv_kwargs)
 
-    df_inlet = pd.read_csv("data_at_inlet.csv", **read_csv_kwargs)
+    df_fragmentation = pd.read_csv(os.path.join(save_dir,"data_at_fragmentation.csv"), **read_csv_kwargs)
 
-    df_vent = pd.read_csv("data_at_vent.csv", **read_csv_kwargs)
+    df_inlet = pd.read_csv(os.path.join(save_dir,"data_at_inlet.csv"), **read_csv_kwargs)
 
-    df_average = pd.read_csv("data_average.csv", **read_csv_kwargs)
+    df_vent = pd.read_csv(os.path.join(save_dir,"data_at_vent.csv"), **read_csv_kwargs)
+
+    df_average = pd.read_csv(os.path.join(save_dir,"data_average.csv"), **read_csv_kwargs)
 
     df_concat = pd.concat([df_dakota_output, df_fragmentation, df_inlet, df_vent, df_average], axis=1)
 
     df_transformed = utils.transform_units_of_variables(df_concat)
     #print(df_transformed)
-    df_transformed.to_csv('data_allConcat_unitsTransformed.csv', index=False)
+    df_transformed.to_csv(os.path.join(save_dir,'data_allConcat_unitsTransformed.csv'), index=False)
 
     #endregion
 

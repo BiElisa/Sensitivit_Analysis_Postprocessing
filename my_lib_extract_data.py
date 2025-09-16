@@ -17,11 +17,12 @@ def extract_data_at_frag(main_dir, bak_name, N, save_dir):
     filename_clean = "data_at_fragmentation.csv"
 
     path_file_total = os.path.join(save_dir, filename_total)
+    path_file_clean = os.path.join(save_dir, filename_clean)
 
-    if os.path.exists(filename_total):
+    if os.path.exists(path_file_total):
         print(f"'{filename_total}' esiste già")
         
-        if os.path.exists(filename_clean):
+        if os.path.exists(path_file_clean):
             print(f"'{filename_clean}' esiste già")
             print("La funzione extract_data_at_frag non verrà eseguita.")
             return
@@ -328,11 +329,12 @@ def extract_data_at_inlet(main_dir, bak_name, N, save_dir):
     filename_clean = "data_at_inlet.csv"
 
     path_file_total = os.path.join(save_dir, filename_total)
+    path_file_clean = os.path.join(save_dir, filename_clean)
 
-    if os.path.exists(filename_total):
+    if os.path.exists(path_file_total):
         print(f"'{filename_total}' esiste già")
         
-        if os.path.exists(filename_clean):
+        if os.path.exists(path_file_clean):
             print(f"'{filename_clean}' esiste già")
             print("La funzione extract_data_at_inlet non verrà eseguita.")
             return
@@ -466,11 +468,12 @@ def extract_data_at_vent (main_dir, bak_name, N, save_dir):
     filename_clean = "data_at_vent.csv"
 
     path_file_total = os.path.join(save_dir, filename_total)
+    path_file_clean = os.path.join(save_dir, filename_clean)
 
-    if os.path.exists(filename_total):
+    if os.path.exists(path_file_total):
         print(f"'{filename_total}' esiste già")
         
-        if os.path.exists(filename_clean):
+        if os.path.exists(path_file_clean):
             print(f"'{filename_clean}' esiste già")
             print("La funzione extract_data_at_vent non verrà eseguita.")
             return
@@ -664,11 +667,12 @@ def extract_data_average (main_dir, bak_name, N, save_dir):
     filename_clean = "data_average.csv"
 
     path_file_total = os.path.join(save_dir, filename_total)
+    path_file_clean = os.path.join(save_dir, filename_clean)
 
-    if os.path.exists(filename_total):
+    if os.path.exists(path_file_total):
         print(f"'{filename_total}' esiste già")
         
-        if os.path.exists(filename_clean):
+        if os.path.exists(path_file_clean):
             print(f"'{filename_clean}' esiste già")
             print("La funzione extract_data_average non verrà eseguita.")
             return
