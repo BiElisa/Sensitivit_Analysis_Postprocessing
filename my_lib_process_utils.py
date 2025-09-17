@@ -572,7 +572,8 @@ def plot_xi_vs_response_fn(
         y_label=None, 
         n_step=1,
         save_name=None,
-        fig_num=None
+        fig_num=None,
+        stats={},
     ):
     """
     Plotta le variabili xi vs una colonna di risposta in un layout dinamico.
@@ -596,8 +597,9 @@ def plot_xi_vs_response_fn(
         Nome da usare per il file salvato (senza estensione). Se None, usa y_label o response_col.
     fig_num : int, optional
         Numero della figura (per creare più finestre distinte).
+    stats : dict, optional
+        Output della funzione bin_and_average. Se fornito, consente di plottare le medie.
     """
-
 
     # Trova tutte le xi presenti nel DataFrame
     xi_cols = [col for col in df.columns if col[0].startswith('x')]
@@ -633,7 +635,16 @@ def plot_xi_vs_response_fn(
         y_values = df[response_col].to_numpy()[::n_step]
 
 
-        axes[i].plot(x_values, y_values, 'rs', markerfacecolor='r', markersize=2)
+        axes[i].plot(x_values, y_values, 'rs', markerfacecolor='r', markersize=2, label="Data")
+
+        if not stats=={}:
+            try:
+                bin_centers = stats[xi[0]]["bin_centers"]
+                resp_means = stats[xi[0]][response_col]["mean"]
+                axes[i].plot(bin_centers, resp_means, "b-", lw=2, label="Binned Mean")
+            except KeyError:
+                pass 
+
         axes[i].set_xlim(input_Min[i], input_Max[i])
         axes[i].set_xlabel(xi_labels[xi])
         axes[i].set_ylabel(y_label)
@@ -642,6 +653,8 @@ def plot_xi_vs_response_fn(
         axes[i].xaxis.set_major_locator(plt.MaxNLocator(nbins=6))
         axes[i].yaxis.set_major_locator(plt.MaxNLocator(nbins=6))
         axes[i].tick_params(axis='both', which='major', labelsize=10)
+
+        axes[i].legend(fontsize=8, loc="best")
 
     # Nascondi assi vuoti se n_xi < n_rows*n_cols
     for j in range(i+1, n_rows*n_cols):
@@ -798,16 +811,16 @@ def bin_and_average(df, N_bins=25):
 
     Returns
     -------
-    results : dict annidato
-        results[x][response] = DataFrame con statistiche per bin
-        results[x]["bin_centers"] = array con i centri dei bin
+    stats : dict annidato
+        stats[x][response] = DataFrame con statistiche per bin
+        stats[x]["bin_centers"] = array con i centri dei bin
     """
 
     # 1. Trova colonne xi e response
     x_cols = [col for col in df.columns.get_level_values(0) if col.startswith("x")]
     response_cols = [col for col in df.columns.get_level_values(0) if col.startswith("response_fn")]
 
-    results = {}
+    stats = {}
 
     for x_col in x_cols:
         x_vals = df[x_col].squeeze().to_numpy()
@@ -822,7 +835,7 @@ def bin_and_average(df, N_bins=25):
         df_bins = pd.cut(x_vals, bins=bins, labels=bin_labels, include_lowest=True)
 
         # Salva i centri dei bin in results
-        results[x_col] = {"bin_centers": bin_labels}
+        stats[x_col] = {"bin_centers": bin_labels}
 
         # Cicla su ogni variabile di risposta
         for resp_col in response_cols:
@@ -841,8 +854,9 @@ def bin_and_average(df, N_bins=25):
             grouped = tmp.groupby("bin")["y"].agg(["mean", "count", "sum", "min", "max"])
 
             # Salva i risultati nel dizionario
-            results[x_col][resp_col] = grouped
+            stats[x_col][resp_col] = grouped
 
-            #print(results)
+            #print(stats)
 
-    return results
+
+    return stats

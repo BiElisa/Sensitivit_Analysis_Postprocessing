@@ -91,12 +91,13 @@ if __name__ == '__main__':
 
     #endregion
 
+    stats = utils.bin_and_average(df_transformed, N_bins=25)
+
     # Numero di step per il campionamento
     num_step_campionamento = 3
 
-    """
     #region -- Plot di correlazione fra una response_fn e tutti i parametri di input
-
+    """
     utils.plot_xi_vs_response_fn(
         df = df_transformed,
         input_Min=adj_input_Min,
@@ -105,7 +106,8 @@ if __name__ == '__main__':
         y_label='Gas volume fraction',
         n_step=num_step_campionamento, 
         save_name="plot_correlazione_Gas_volume_fraction",
-        fig_num=1
+        fig_num=1,
+        stats=stats
     )
 
     utils.plot_xi_vs_response_fn(
@@ -116,7 +118,8 @@ if __name__ == '__main__':
         y_label='Fragmentation depth (m)',
         n_step=num_step_campionamento,  
         save_name="plot_correlazione_Fragmentation_depth",
-        fig_num=2
+        fig_num=2,
+        stats=stats
     )
 
     utils.plot_xi_vs_response_fn(
@@ -127,7 +130,8 @@ if __name__ == '__main__':
         y_label='Mass flow rate (kg/s)',
         n_step=num_step_campionamento,  
         save_name="plot_correlazione_Mass_flow_rate",
-        fig_num=3
+        fig_num=3,
+        stats=stats
     )
 
     utils.plot_xi_vs_response_fn(
@@ -138,9 +142,10 @@ if __name__ == '__main__':
         y_label='Exit velocity (m/s)',
         n_step=num_step_campionamento,  
         save_name="plot_correlazione_Exit_velocity",
-        fig_num=4
+        fig_num=4,
+        stats=stats
     )
-
+    """
     utils.plot_xi_vs_response_fn(
         df = df_transformed,
         input_Min=adj_input_Min,
@@ -149,9 +154,10 @@ if __name__ == '__main__':
         y_label='Exit crystal content (vol.%)',
         n_step=num_step_campionamento,  
         save_name="plot_correlazione_Exit_crystal_content",
-        fig_num=5
+        fig_num=5,
+        stats=stats
     )
-
+    """
     #endregion
     
     #region -- plot_correlazioni_con_x4 --
@@ -250,15 +256,16 @@ if __name__ == '__main__':
     plt.show()
     """
 
-    results = utils.bin_and_average(df_transformed, N_bins=25)
+    
     input('...')
 
     # esempio: medie di response_fn_15 rispetto a x2
-    x2_centers = results["x2"]["bin_centers"]
-    resp15_means = results["x2"]["response_fn_15"]["mean"]
+    x2_centers = stats["x2"]["bin_centers"]
+    resp15_means = stats["x2"]["response_fn_12"]["mean"]
 
-    import matplotlib.pyplot as plt
     plt.plot(x2_centers, resp15_means, "b-", lw=2)
+
+
     plt.show()
 
 
