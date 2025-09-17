@@ -742,7 +742,7 @@ def plot_lists(
         plt.savefig(path, dpi=300)
         print(f"Salvata figura in {path}")
 
-    plt.show(block=True)
+    #plt.show(block=True)
     plt.pause(0.1)
 
 def parse_entry(entry):
@@ -782,3 +782,67 @@ def parse_entry(entry):
 
     else:
         raise ValueError(f"Entry non valido: {entry}")
+    
+def bin_and_average(df, N_bins=25):
+    """
+    Divide i valori delle variabili xi in N_bins intervalli (bin),
+    e calcola statistiche (media, numero di punti, somma, min, max)
+    per ciascun response_fn_* dentro a ciascun bin.
+
+    Parameters
+    ----------
+    df : pd.DataFrame con colonne MultiIndex
+        Deve contenere colonne chiamate "x1", "x2", ..., "response_fn_1", ...
+    N_bins : int
+        Numero di intervalli (bin) per la discretizzazione.
+
+    Returns
+    -------
+    results : dict annidato
+        results[x][response] = DataFrame con statistiche per bin
+        results[x]["bin_centers"] = array con i centri dei bin
+    """
+
+    # 1. Trova colonne xi e response
+    x_cols = [col for col in df.columns.get_level_values(0) if col.startswith("x")]
+    response_cols = [col for col in df.columns.get_level_values(0) if col.startswith("response_fn")]
+
+    results = {}
+
+    for x_col in x_cols:
+        x_vals = df[x_col].squeeze().to_numpy()
+        
+        # Costruisci i bin: da min a max della variabile, diviso in N_bins parti
+        bins = np.linspace(np.min(x_vals), np.max(x_vals)*1.00001, N_bins+1)
+
+        # Calcola i centri dei bin (media tra inizio e fine intervallo)
+        bin_labels = 0.5 * (bins[:-1] + bins[1:])  # centri
+
+        # Assegna a ciascun valore xi il suo bin di appartenenza
+        df_bins = pd.cut(x_vals, bins=bins, labels=bin_labels, include_lowest=True)
+
+        # Salva i centri dei bin in results
+        results[x_col] = {"bin_centers": bin_labels}
+
+        # Cicla su ogni variabile di risposta
+        for resp_col in response_cols:
+            y = df[resp_col].squeeze().to_numpy()
+
+            # Trasformazioni particolari
+            #if resp_col == "response_fn_14":
+            #    y = np.log10(y + 1)
+            #elif resp_col == "response_fn_20":
+            #    y = np.log10(y)
+
+            # Costruisci un DataFrame temporaneo con bin e y
+            tmp = pd.DataFrame({"bin": df_bins, "y": y})
+
+            # Raggruppa per bin e calcola statistiche
+            grouped = tmp.groupby("bin")["y"].agg(["mean", "count", "sum", "min", "max"])
+
+            # Salva i risultati nel dizionario
+            results[x_col][resp_col] = grouped
+
+            #print(results)
+
+    return results

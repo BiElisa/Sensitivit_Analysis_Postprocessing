@@ -82,8 +82,6 @@ if __name__ == '__main__':
     #print(df_transformed)
     df_transformed.to_csv(os.path.join(save_dir,'data_allConcat_unitsTransformed.csv'), index=False)
 
-    #endregion
-
     df_boundsInfo, input_Min, input_Max = utils.import_dakota_bounds()
 
     # Applica le stesse trasformazioni delle colonne di df_transformed
@@ -91,10 +89,13 @@ if __name__ == '__main__':
     print(f'\nadj_input_Min = {adj_input_Min}')
     print(f'adj_input_Max = {adj_input_Max}\n')
 
-    #region -- Plot di correlazione fra una response_fn e tutti i parametri di input
+    #endregion
 
     # Numero di step per il campionamento
     num_step_campionamento = 3
+
+    """
+    #region -- Plot di correlazione fra una response_fn e tutti i parametri di input
 
     utils.plot_xi_vs_response_fn(
         df = df_transformed,
@@ -152,7 +153,70 @@ if __name__ == '__main__':
     )
 
     #endregion
+    
+    #region -- plot_correlazioni_con_x4 --
+    list_for_x_axis = [
+        ("x4"), #1
+        ("x4"), #2
+        ("x4"), #3
+        ("x4"), #4
+        ("x4"), #5
+        ("x4"), #6
+    ]
 
+    list_for_y_axis = [
+        ("response_fn_4", None, "Exit velocity [m/s]"), #1
+        ("response_fn_15"), #2
+        ("response_fn_30", None, "Diss. H_2O content @Frag [wt.%]"), #3
+        ("response_fn_25"), #4
+        ("response_fn_24"), #5
+        ("response_fn_20", np.log10, "Log 10 Viscosity @Frag [Pa s]"), #6
+    ]
+
+    utils.plot_lists(
+        df=df_transformed,
+        x_axis=list_for_x_axis,
+        y_axis=list_for_y_axis,
+        input_Min=adj_input_Min,
+        input_Max=adj_input_Max,
+        n_step=1,
+        fig_num=6,
+        save_name="plot_correlazioni_con_x4"
+    )
+    #endregion ----
+
+    #region -- plot_correlazioni_con_x5 --
+    list_for_x_axis = [
+        ("x5"), #1
+        ("x5"), #2
+        ("x5"), #3
+        ("x5"), #4
+        ("x5"), #5
+        ("x5"), #6
+    ]
+
+    list_for_y_axis = [
+        ("response_fn_4", None, "Exit velocity [m/s]"), #1
+        ("response_fn_15"), #2
+        ("response_fn_30", None, "Diss. H_2O content @Frag [wt.%]"), #3
+        ("response_fn_25"), #4
+        ("response_fn_24"), #5
+        ("response_fn_20", np.log10, "Log 10 Viscosity @Frag [Pa s]"), #6
+    ]
+
+    utils.plot_lists(
+        df=df_transformed,
+        x_axis=list_for_x_axis,
+        y_axis=list_for_y_axis,
+        input_Min=adj_input_Min,
+        input_Max=adj_input_Max,
+        n_step=1,
+        fig_num=7,
+        save_name="plot_correlazioni_con_x5"
+    )
+    #endregion ----
+
+    #region -- ESEMPIO DI PLOT VARI CON TRASFORMAZIONI E LABELS --
     list_for_x_axis = [
         ("x1", None, None),
         ("x2", lambda v: v-273, "Temperatura (°C)"),
@@ -178,8 +242,25 @@ if __name__ == '__main__':
         input_Min=adj_input_Min,
         input_Max=adj_input_Max,
         n_step=1,
-        fig_num=6,
+        fig_num=30,
         save_name="plot_correlazioni_varie"
     )
+    #endregion
 
     plt.show()
+    """
+
+    results = utils.bin_and_average(df_transformed, N_bins=25)
+    input('...')
+
+    # esempio: medie di response_fn_15 rispetto a x2
+    x2_centers = results["x2"]["bin_centers"]
+    resp15_means = results["x2"]["response_fn_15"]["mean"]
+
+    import matplotlib.pyplot as plt
+    plt.plot(x2_centers, resp15_means, "b-", lw=2)
+    plt.show()
+
+
+
+
