@@ -4,6 +4,27 @@ import os
 import my_lib_process_utils as utils
 import my_lib_remove_simulations_from_csv as rm
 
+def check_existance_of_csv_files(filename_total,filename_clean,save_dir,name_program):
+    
+    path_file_total = os.path.join(save_dir, filename_total)
+    path_file_clean = os.path.join(save_dir, filename_clean)
+
+    if os.path.exists(path_file_total):
+        print(f"'{filename_total}' esiste già")
+        
+        if os.path.exists(path_file_clean):
+            print(f"'{filename_clean}' esiste già")
+            print(f"La funzione {name_program} non verrà eseguita.")
+            return False # nothing to do
+        
+        print(f"'{filename_clean}' invece va creato")
+        rm.remove_null_simulations(filename_total, filename_clean, save_dir)
+        return False # dopo aver creato il clean, non serve fare altro 
+    
+    else:
+        print(f"'{filename_total}' non trovato: la funzione {name_program} deve essere eseguita.")
+        return True
+
 def extract_data_at_frag(main_dir, bak_name, N, save_dir):
     """
     Estrae i dati da tutti i file .bak e .std contenuti nelle cartelle workdir.N.
@@ -16,19 +37,9 @@ def extract_data_at_frag(main_dir, bak_name, N, save_dir):
     filename_total = "data_at_fragmentation_total.csv"
     filename_clean = "data_at_fragmentation.csv"
 
-    path_file_total = os.path.join(save_dir, filename_total)
-    path_file_clean = os.path.join(save_dir, filename_clean)
+    do_it = check_existance_of_csv_files(filename_total,filename_clean,save_dir,extract_data_at_frag.__name__)
 
-    if os.path.exists(path_file_total):
-        print(f"'{filename_total}' esiste già")
-        
-        if os.path.exists(path_file_clean):
-            print(f"'{filename_clean}' esiste già")
-            print("La funzione extract_data_at_frag non verrà eseguita.")
-            return
-        
-        print(f"'{filename_clean}' invece va creato")
-        rm.remove_null_simulations(filename_total, filename_clean, save_dir)
+    if not do_it:
         return
 
     # 1. Inizializza i dizionari per i dati di risposta
@@ -308,7 +319,7 @@ def extract_data_at_frag(main_dir, bak_name, N, save_dir):
     final_df = pd.concat([labels_df, output_df], ignore_index=True)
 
     # Salvataggio in csv
-    final_df.to_csv(path_file_total, index=False, encoding="utf-8")
+    final_df.to_csv(os.path.join(save_dir, filename_total), index=False, encoding="utf-8")
 
     print(f"\nEstrazione completata. \nDati salvati in {save_dir}/{filename_total}.")
 
@@ -328,21 +339,10 @@ def extract_data_at_inlet(main_dir, bak_name, N, save_dir):
     filename_total = "data_at_inlet_total.csv"
     filename_clean = "data_at_inlet.csv"
 
-    path_file_total = os.path.join(save_dir, filename_total)
-    path_file_clean = os.path.join(save_dir, filename_clean)
+    do_it = check_existance_of_csv_files(filename_total,filename_clean,save_dir,extract_data_at_frag.__name__)
 
-    if os.path.exists(path_file_total):
-        print(f"'{filename_total}' esiste già")
-        
-        if os.path.exists(path_file_clean):
-            print(f"'{filename_clean}' esiste già")
-            print("La funzione extract_data_at_inlet non verrà eseguita.")
-            return
-        
-        print(f"'{filename_clean}' invece va creato")
-        rm.remove_null_simulations(filename_total, filename_clean, save_dir)
+    if not do_it:
         return
-
 
     # 1. Inizializza i dizionari per i dati di risposta
     response_data = {f'response_fn_{i}': np.full(N, np.nan) for i in range(40, 50)}
@@ -446,7 +446,7 @@ def extract_data_at_inlet(main_dir, bak_name, N, save_dir):
     final_df = pd.concat([labels_df, output_df], ignore_index=True)
 
     # Salvataggio in csv
-    final_df.to_csv(path_file_total, index=False, encoding="utf-8")
+    final_df.to_csv(os.path.join(save_dir, filename_total), index=False, encoding="utf-8")
 
     #output_df.to_csv('data_at_inlet_total.csv', index=False)
     print(f"\nEstrazione completata. \nDati salvati in {save_dir}/{filename_total}.")
@@ -467,19 +467,9 @@ def extract_data_at_vent (main_dir, bak_name, N, save_dir):
     filename_total = "data_at_vent_total.csv"
     filename_clean = "data_at_vent.csv"
 
-    path_file_total = os.path.join(save_dir, filename_total)
-    path_file_clean = os.path.join(save_dir, filename_clean)
+    do_it = check_existance_of_csv_files(filename_total,filename_clean,save_dir,extract_data_at_frag.__name__)
 
-    if os.path.exists(path_file_total):
-        print(f"'{filename_total}' esiste già")
-        
-        if os.path.exists(path_file_clean):
-            print(f"'{filename_clean}' esiste già")
-            print("La funzione extract_data_at_vent non verrà eseguita.")
-            return
-        
-        print(f"'{filename_clean}' invece va creato")
-        rm.remove_null_simulations(filename_total, filename_clean, save_dir)
+    if not do_it:
         return
 
     # 1. Inizializza i dizionari per i dati di risposta
@@ -646,7 +636,7 @@ def extract_data_at_vent (main_dir, bak_name, N, save_dir):
     save_path = os.path.join(save_dir, filename)
 
     # Salvataggio in csv
-    final_df.to_csv(path_file_total, index=False, encoding="utf-8")
+    final_df.to_csv(os.path.join(save_dir, filename_total), index=False, encoding="utf-8")
 
     print(f"\nEstrazione completata. \nDati salvati in {save_dir}/{filename_total}.")
 
@@ -666,19 +656,9 @@ def extract_data_average (main_dir, bak_name, N, save_dir):
     filename_total = "data_average_total.csv"
     filename_clean = "data_average.csv"
 
-    path_file_total = os.path.join(save_dir, filename_total)
-    path_file_clean = os.path.join(save_dir, filename_clean)
+    do_it = check_existance_of_csv_files(filename_total,filename_clean,save_dir,extract_data_at_frag.__name__)
 
-    if os.path.exists(path_file_total):
-        print(f"'{filename_total}' esiste già")
-        
-        if os.path.exists(path_file_clean):
-            print(f"'{filename_clean}' esiste già")
-            print("La funzione extract_data_average non verrà eseguita.")
-            return
-        
-        print(f"'{filename_clean}' invece va creato")
-        rm.remove_null_simulations(filename_total, filename_clean, save_dir)
+    if not do_it:
         return
 
     # 1. Inizializza i dizionari per i dati di risposta
@@ -809,7 +789,7 @@ def extract_data_average (main_dir, bak_name, N, save_dir):
     final_df = pd.concat([labels_df, output_df], ignore_index=True)
 
     # Salvataggio in csv
-    final_df.to_csv(path_file_total, index=False, encoding="utf-8")
+    final_df.to_csv(os.path.join(save_dir, filename_total), index=False, encoding="utf-8")
 
     print(f"\nEstrazione completata. \nDati salvati in {save_dir}/{filename_total}.")
 
