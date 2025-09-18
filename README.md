@@ -35,7 +35,7 @@ The script generates:
 7. data_average_total.csv
 8. data_average.csv
 
-These files are saved in the directory "csv_files"
+These files are saved in the directory "csv_files".
 
 ## Plot standard correlation plots
 
@@ -43,4 +43,4 @@ Execute the script "plot_correlation.py", for example by terminal:
 
 $ python plot_correlation.py 
 
-The script generates several figures which are saved in the directory "plot_correlations".
+The script generates several figures which are saved in the directory "plot_correlations". The figure represent the correlation between several variables and their means. The user can modify the script in order to get the personalised correation plots.
