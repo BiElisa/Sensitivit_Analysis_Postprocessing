@@ -44,3 +44,5 @@ Execute the script "plot_correlation.py", for example by terminal:
 $ python plot_correlation.py 
 
 The script generates several figures which are saved in the directory "plot_correlations". The figure represent the correlation between several variables and their means. The user can modify the script in order to get the personalised correation plots.
+
+Moreover, the sobol indices are plot, and the user can select which response_fn analyse.

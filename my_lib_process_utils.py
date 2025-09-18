@@ -603,80 +603,46 @@ def plot_xi_vs_response_fn(
 
     # Trova tutte le xi presenti nel DataFrame
     xi_cols = [col for col in df.columns if col[0].startswith('x')]
-    n_xi = len(xi_cols)
+    
+    if not xi_cols:
+        raise ValueError("Nessuna colonna xi trovata nel DataFrame.")
 
-    # Trova la colonna corrispondente nel MultiIndex
+    # Verifica che la colonna di risposta esista
     matches = [col for col in df.columns if col[0] == response_col]
     if not matches:
         raise ValueError(f"La colonna '{response_col}' non è stata trovata nel DataFrame.")
     if len(matches) > 1:
         print(f"Attenzione: trovate più colonne per '{response_col}', uso la prima.")
-    response_tuple = matches[0]  # (response_fn_x, label descrittiva)
+    response_tuple = matches[0]
 
-    y_label = y_label or response_tuple[1] # response_col
+    # Etichetta Y: o quella passata, o quella dal MultiIndex
+    y_label = y_label or response_tuple[1]
 
-    # Estrai le label dal secondo livello del MultiIndex se presente
-    xi_labels = {}
+    # Costruisci le liste per plot_lists
+    x_axis = []
+    y_axis = []
     for col in xi_cols:
+        # Label della xi (dal MultiIndex se disponibile)
         if isinstance(df.columns, pd.MultiIndex):
-            xi_labels[col] = df.columns.get_level_values(1)[df.columns.get_loc(col)]
+            xi_label = df.columns.get_level_values(1)[df.columns.get_loc(col)]
         else:
-            xi_labels[col] = col
+            xi_label = col[0]
 
-    # Layout subplot dinamico
-    n_cols = min(3, n_xi)
-    n_rows = math.ceil(n_xi / n_cols)
+        x_axis.append((col[0], None, xi_label))
+        y_axis.append((response_col, None, y_label))
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(5*n_cols, 4*n_rows), num=fig_num)
-    axes = axes.flatten() if n_xi > 1 else [axes]
-
-    for i, xi in enumerate(xi_cols):
-        x_values =df[xi].to_numpy()[::n_step] 
-        y_values = df[response_col].to_numpy()[::n_step]
-
-
-        axes[i].plot(x_values, y_values, 'rs', markerfacecolor='r', markersize=2, label="Data")
-
-        if not stats=={}:
-            try:
-                bin_centers = stats[xi[0]]["bin_centers"]
-                resp_means = stats[xi[0]][response_col]["mean"]
-                axes[i].plot(bin_centers, resp_means, "b-", lw=2, label="Binned Mean")
-            except KeyError:
-                pass 
-
-        axes[i].set_xlim(input_Min[i], input_Max[i])
-        axes[i].set_xlabel(xi_labels[xi])
-        axes[i].set_ylabel(y_label)
-
-        # Mostra numeri sugli assi e tick automatici
-        axes[i].xaxis.set_major_locator(plt.MaxNLocator(nbins=6))
-        axes[i].yaxis.set_major_locator(plt.MaxNLocator(nbins=6))
-        axes[i].tick_params(axis='both', which='major', labelsize=10)
-
-        axes[i].legend(fontsize=8, loc="best")
-
-    # Nascondi assi vuoti se n_xi < n_rows*n_cols
-    for j in range(n_xi, n_rows*n_cols):
-        axes[j].axis('off')
-
-    plt.tight_layout()
-
-    # -- Salvataggio automatico ---
-    save_dir = "plot_correlations"
-    os.makedirs(save_dir, exist_ok=True)
-
-    save_label = save_name or y_label.replace(" ", "_")
-    save_path = os.path.join(save_dir, f"{save_label}.png")
-
-    plt.savefig(save_path, dpi=300)
-    print(f"Figura salvata in {save_path}")
-
-    # Mostra senza bloccare
-    plt.show(block=False)
-    plt.pause(1.0)
-
-    plt.close(fig)
+    # Richiama plot_lists
+    plot_lists(
+        df=df,
+        x_axis=x_axis,
+        y_axis=y_axis,
+        input_Min=input_Min,
+        input_Max=input_Max,
+        n_step=n_step,
+        fig_num=fig_num,
+        save_name=save_name,
+        stats=stats,
+    )
 
 def plot_lists(
     df,
@@ -940,3 +906,116 @@ def bin_and_average(df, N_bins=25):
             #print(stats)
 
     return stats
+
+def compute_sobol_indices(df, stats):
+    """
+    Calcola gli indici di Sobol di primo ordine normalizzati a partire dai risultati
+    di bin_and_average (stats).
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame originale con tutte le colonne xi e response_fn.
+    stats : dict
+        Output di bin_and_average:
+        stats[xi][response_fn] = DataFrame con colonne ['mean', 'count', ...]
+        stats[xi]["bin_centers"] = array dei centri dei bin
+
+    Returns
+    -------
+    sobol_indices : dict
+        sobol_indices[response_fn] = array normalizzata degli indici di Sobol per ciascun xi
+    """
+
+    xi_cols = [col for col in df.columns if col[0].startswith("x")]
+    response_cols = [col for col in df.columns if col[0].startswith("response_fn")]
+
+    sobol_indices = {}
+
+    for resp in response_cols:
+        total_var = df[resp].var(ddof=0)  # varianza totale
+        indices = []
+
+        for xi in xi_cols:
+            try:
+                bin_means = stats[xi[0]][resp[0]]['mean']  # estrai medie per bin
+                var_bin = bin_means.var(ddof=0)           # varianza delle medie
+                # protezione divisione per zero
+                if total_var == 0:
+                    sobol_idx = 0.0
+                else:
+                    sobol_idx = var_bin / total_var # primo ordine
+            except KeyError:
+                sobol_idx = 0.0  # o np.nan se vuoi. Questo nel caso la statistica non sia disponibile
+            indices.append(sobol_idx)
+
+        indices = np.array(indices)
+        # normalizzazione
+        sum_indices = np.nansum(indices)
+        if sum_indices == 0:
+            normalized = indices  # tutti 0
+        else:
+            normalized = indices / sum_indices
+
+        sobol_indices[resp[0]] = normalized
+        
+    return sobol_indices
+
+def plot_sobol_indices(sobol_indices, xi_labels=None, response_labels=None, save_path=None):
+    """
+    Plotta gli Sobol indices normalizzati per più response_fn come stacked bar plot.
+
+    Parameters
+    ----------
+    sobol_indices : dict
+        Chiavi = nome della response_fn
+        Valori = array di Sobol indices normalizzati per ciascun xi
+    xi_labels : list of str, optional
+        Nomi delle variabili xi (default: x1, x2, ...)
+    response_labels : dict, optional
+        Etichette leggibili per ciascun response_fn
+    save_path : str, optional
+        Percorso dove salvare la figura (PNG)
+    """
+    if xi_labels is None:
+        xi_labels = ['x1','x2','x3','x4','x5','x6']
+
+    # responses_to_plot = list(sobol_indices.keys()) # questo fa plottare gli indici di tutte le respo_fn
+    # filtriamo le response_fn da plottare
+    responses_to_plot = list(response_labels.keys()) if response_labels else list(sobol_indices.keys())
+    n_resp = len(responses_to_plot)
+
+    fig, axes = plt.subplots(1, n_resp, figsize=(3*n_resp,5), sharey=True)
+    if n_resp == 1:
+        axes = [axes]
+
+    color_palette = plt.cm.tab20.colors
+
+    for ax, resp in zip(axes, responses_to_plot):
+        indices = np.array(sobol_indices.get(resp, np.zeros(len(xi_labels))))
+        bottom = np.zeros(1)
+        for i, val in enumerate(indices):
+            ax.bar(1, val, bottom=bottom.sum(), width=0.5, color=color_palette[i % len(color_palette)])
+            bottom[0] += val
+
+#        data = indices.reshape(1, -1)
+#        bplot = ax.bar(range(1,2), data, stacked=True, width=0.5, color=color_palette[:len(xi_labels)])
+
+        ax.set_xlim(0.5, 1.5)
+        ax.set_xticks([1])
+        ax.set_xticklabels([''])
+        ax.set_ylim(0,1)
+        ax.set_title(response_labels.get(resp, resp) if response_labels else resp)
+
+    # legenda solo nel primo subplot
+    axes[0].legend(xi_labels, loc='lower left', fontsize=9)
+    fig.suptitle('Sobol indices normalized', fontsize=14)
+    plt.tight_layout(rect=[0,0,1,0.95])
+
+    if save_path:
+        plt.savefig(os.path.join("plot_correlations", f"{save_path}.png"), dpi=300)
+        print(f"Figura salvata in {save_path}")
+
+    plt.show()
+    plt.close(fig)
+

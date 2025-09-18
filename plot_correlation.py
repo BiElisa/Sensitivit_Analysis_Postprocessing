@@ -92,17 +92,41 @@ if __name__ == '__main__':
     #endregion
 
     stats = utils.bin_and_average(df_concat, N_bins=25)
-#    stats = utils.bin_and_average(df_transformed, N_bins=25)
+
+    sobol_indices = utils.compute_sobol_indices(df_concat, stats)
+
+    # chiavi = response_fn, valori = array di indici normalizzati per ciascun xi
+    #xi_labels = ['Press.','Temp.','Radius','H2O','CO2','Crystals']
+    response_labels = {
+        'response_fn_1': 'Gas volume fraction',
+        'response_fn_15': 'Fragmentation depth',
+        'response_fn_12': 'Mass flow rate',
+        'response_fn_4': 'Exit velocity',
+        'response_fn_16': 'Exit crystal content',
+#        'response_fn28': 'Undercooling @Frag'
+    }
+
+    utils.plot_sobol_indices(
+        sobol_indices, 
+        xi_labels=None, #xi_labels, 
+        response_labels=response_labels, 
+        save_path='sobol_indices'
+    )
+
+    input('...')
+
+
+
 
     # Numero di step per il campionamento
     num_step_campionamento = 3
 
     #region -- Plot di correlazione fra una response_fn e tutti i parametri di input
-    """
+
     utils.plot_xi_vs_response_fn(
-        df = df_transformed,
-        input_Min=adj_input_Min,
-        input_Max=adj_input_Max,
+        df = df_concat,
+        input_Min=input_Min,
+        input_Max=input_Max,
         response_col='response_fn_1',
         y_label='Gas volume fraction',
         n_step=num_step_campionamento, 
@@ -112,9 +136,9 @@ if __name__ == '__main__':
     )
 
     utils.plot_xi_vs_response_fn(
-        df = df_transformed,
-        input_Min=adj_input_Min,
-        input_Max=adj_input_Max,
+        df = df_concat,
+        input_Min=input_Min,
+        input_Max=input_Max,
         response_col='response_fn_15',
         y_label='Fragmentation depth (m)',
         n_step=num_step_campionamento,  
@@ -124,9 +148,9 @@ if __name__ == '__main__':
     )
 
     utils.plot_xi_vs_response_fn(
-        df = df_transformed,
-        input_Min=adj_input_Min,
-        input_Max=adj_input_Max,
+        df = df_concat,
+        input_Min=input_Min,
+        input_Max=input_Max,
         response_col='response_fn_12',
         y_label='Mass flow rate (kg/s)',
         n_step=num_step_campionamento,  
@@ -136,9 +160,9 @@ if __name__ == '__main__':
     )
 
     utils.plot_xi_vs_response_fn(
-        df = df_transformed,
-        input_Min=adj_input_Min,
-        input_Max=adj_input_Max,
+        df = df_concat,
+        input_Min=input_Min,
+        input_Max=input_Max,
         response_col='response_fn_4',
         y_label='Exit velocity (m/s)',
         n_step=num_step_campionamento,  
@@ -148,9 +172,9 @@ if __name__ == '__main__':
     )
     
     utils.plot_xi_vs_response_fn(
-        df = df_transformed,
-        input_Min=adj_input_Min,
-        input_Max=adj_input_Max,
+        df = df_concat,
+        input_Min=input_Min,
+        input_Max=input_Max,
         response_col='response_fn_16',
         #y_label='Exit crystal content (vol.%)',
         n_step=num_step_campionamento,  
@@ -158,7 +182,7 @@ if __name__ == '__main__':
         fig_num=5,
         stats=stats
     )
-    """
+
     #endregion
     
     #region -- plot_correlazioni_con_x4 --
@@ -187,7 +211,7 @@ if __name__ == '__main__':
         input_Min=input_Min,
         input_Max=input_Max,
         n_step=3,
-        fig_num=6,
+        fig_num=7,
         save_name="plot_correlazioni_con_x4",
         stats=stats
     )
@@ -219,7 +243,7 @@ if __name__ == '__main__':
         input_Min=input_Min,
         input_Max=input_Max,
         n_step=1,
-        fig_num=7,
+        fig_num=8,
         save_name="plot_correlazioni_con_x5",
         stats=stats
     )
@@ -257,20 +281,46 @@ if __name__ == '__main__':
     )
     #endregion
     """
-    plt.show()
-
-    """    
-    input('...')
-
-    # esempio: medie di response_fn_15 rispetto a x2
-    x2_centers = stats["x2"]["bin_centers"]
-    resp15_means = stats["x2"]["response_fn_12"]["mean"]
-
-    plt.plot(x2_centers, resp15_means, "b-", lw=2)
 
 
-    plt.show()
+
+
+
+
+
+    """ Prove per plot sobol indici
+    list_for_x_axis = [
+        ('x1', None, 'x1'),
+        ('x2', None, 'x2'),
+        ('x3', None, 'x3'),
+        ('x4', None, 'x4'),
+        ('x5', None, 'x5'),
+        ('x6', None, 'x6')
+    ]
+
+    # ogni y_axis è un response_fn, useremo Sobol indices come "medie"
+    list_for_y_axis = []
+    for resp in ['response_fn1','response_fn15','response_fn12']:
+        list_for_y_axis.extend([(resp, lambda v, r=resp: sobol_indices[r], f"Sobol {r}") for r in [resp]*6])
+
+    # plot
+    utils.plot_lists(
+        df=df_concat,
+        x_axis=list_for_x_axis*3,   # ripetiamo x1..x6 per ogni response_fn
+        y_axis=list_for_y_axis,
+        input_Min=input_Min,
+        input_Max=input_Max,
+        n_step=1,
+        fig_num=100,
+        save_name="sobol_indices_plot",
+        stats={}  # non serve più qui
+    )
+
+#    utils.plot_sobol(sobol_indices, xi_cols, response_cols)
+
     """
+    
+
 
 
 
