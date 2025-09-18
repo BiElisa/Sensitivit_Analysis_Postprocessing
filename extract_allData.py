@@ -109,7 +109,7 @@ def extract_allData (verbose = True, pause = True):
             'response_fn_13': 'Volume flow rate [m3/s]',
             'response_fn_14': 'Fragmentation Code',
             'response_fn_15': 'Fragmentation depth [m]',
-            'response_fn_16': 'Total crystal content [vol.%]',
+            'response_fn_16': 'Total crystal content [vol.]',
             'response_fn_17': 'Undercooling relative to plag [K]',
             'response_fn_18': 'Viscosity at fragmentation [Pa·s]',
             'response_fn_19': 'Fragmentation length scale [m]',

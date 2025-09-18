@@ -657,7 +657,7 @@ def plot_xi_vs_response_fn(
         axes[i].legend(fontsize=8, loc="best")
 
     # Nascondi assi vuoti se n_xi < n_rows*n_cols
-    for j in range(i+1, n_rows*n_cols):
+    for j in range(n_xi, n_rows*n_cols):
         axes[j].axis('off')
 
     plt.tight_layout()
@@ -673,8 +673,10 @@ def plot_xi_vs_response_fn(
     print(f"Figura salvata in {save_path}")
 
     # Mostra senza bloccare
-    #plt.show(block=True)
-    #plt.pause(0.1)
+    plt.show(block=False)
+    plt.pause(1.0)
+
+    plt.close(fig)
 
 def plot_lists(
     df,
@@ -684,7 +686,8 @@ def plot_lists(
     input_Max,
     n_step=1,
     fig_num=None,
-    save_name=None
+    save_name=None,
+    stats={}
 ):
     """
     Plotta coppie di variabili prese da due liste (x_axis[i], y_axis[i]).
@@ -706,10 +709,14 @@ def plot_lists(
         Numero figura matplotlib.
     save_name : str
         Base name per salvare le figure.
+    stats : dict, optional
+        Output della funzione bin_and_average. Se fornito, consente di plottare le medie.
     """
     
     if len(x_axis) != len(y_axis):
         raise ValueError("Le liste x_axis e y_axis devono avere la stessa lunghezza.")
+    
+    nonlinear_funcs = [np.log10, np.log, np.sqrt, np.exp] # serve per le eventuali trasformazion per x e y
 
     num_plots = len(x_axis)
     n_cols = min(3, num_plots)
@@ -738,10 +745,83 @@ def plot_lists(
         if not y_label:
             y_label = df.columns.get_level_values(1)[df.columns.get_level_values(0) == y_col][0]
 
-        ax.plot(x_vals, y_vals, "rs", markerfacecolor="r", markersize=2)
+        ax.plot(x_vals, y_vals, "rs", markerfacecolor="r", markersize=2, label="Data")
+
+        # --- Settaggio limiti se x/y sono xi---
+        if x_col.startswith("x"):
+            idx = int(x_col[1:]) - 1
+            x_min, x_max = input_Min[idx], input_Max[idx]
+            if x_transform:
+                x_min, x_max = x_transform(np.array([x_min, x_max]))
+            ax.set_xlim(x_min, x_max)
+
+        if y_col.startswith("x"):
+            idx = int(y_col[1:]) - 1
+            y_min, y_max = input_Min[idx], input_Max[idx]
+            if y_transform:
+                y_min, y_max = y_transform(np.array([y_min, y_max]))
+            ax.set_ylim(y_min, y_max)
+        # --------------------------------------
+
+
+        if stats:
+            try:
+
+                bin_centers = stats[x_col]["bin_centers"]
+
+                nonlinear_x = x_transform in nonlinear_funcs
+                nonlinear_y = y_transform in nonlinear_funcs
+
+                if nonlinear_x or nonlinear_y:
+                    # Ricalcolo binning e medie sui dati trasformati
+                    x_vals_full = df[x_col].to_numpy().ravel()
+                    y_vals_full = df[y_col].to_numpy().ravel()
+
+                    if x_transform:
+                        x_vals_full = x_transform(x_vals_full)
+                    if y_transform:
+                        y_vals_full = y_transform(y_vals_full)
+
+                    # Ricostruisco i bin sui dati trasformati
+                    bins = np.linspace(np.min(x_vals_full), np.max(x_vals_full)*1.00001, len(bin_centers)+1)
+                    df_bins = pd.cut(
+                        x_vals_full, 
+                        bins=bins, 
+                        labels=0.5*(bins[:-1]+bins[1:]), 
+                        include_lowest=True
+                    )
+
+                    tmp = pd.DataFrame({"bin": df_bins, "y": y_vals_full})
+                    grouped = tmp.groupby("bin")["y"].mean()
+
+                    bin_centers = grouped.index.to_numpy(dtype=float)
+                    resp_means = grouped.to_numpy()
+
+                else:
+                    # Uso direttamente le medie pre-calcolate
+                    resp_means = stats[x_col][y_col]["mean"].to_numpy()
+                    if x_transform:
+                        bin_centers = x_transform(bin_centers)
+                    if y_transform:
+                        resp_means = y_transform(resp_means)
+
+
+#                bin_centers = stats[x_col]["bin_centers"]
+#                resp_means = stats[x_col][y_col]["mean"]
+#                # eventuali trasformazioni
+#                if x_transform:
+#                    bin_centers = x_transform(bin_centers)
+#                if y_transform:
+#                    resp_means = y_transform(resp_means.to_numpy())
+
+                ax.plot(bin_centers, resp_means, "b-", lw=2, label="Binned Mean")
+            except KeyError:
+                pass
+
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
         ax.grid(True)
+        ax.legend(fontsize=8, loc="best")
 
     # Spegni eventuali assi vuoti
     for ax in axes[num_plots:]:
@@ -756,7 +836,8 @@ def plot_lists(
         print(f"Salvata figura in {path}")
 
     #plt.show(block=True)
-    plt.pause(0.1)
+    plt.pause(1.3)
+    plt.close(fig)
 
 def parse_entry(entry):
 
@@ -857,6 +938,5 @@ def bin_and_average(df, N_bins=25):
             stats[x_col][resp_col] = grouped
 
             #print(stats)
-
 
     return stats
