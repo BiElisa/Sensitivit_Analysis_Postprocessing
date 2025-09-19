@@ -65,7 +65,8 @@ def plot_sobol_indices(sobol_indices, xi_labels=None, response_labels=None, save
         plt.savefig(os.path.join(save_dir, f"{save_name}.png"), dpi=300)
         print(f"Figura salvata in {save_dir} as {save_name}")
 
-    plt.show()
+    #plt.show()
+    plt.pause(1.3)
     plt.close(fig)
 
 def compute_sobol_indices(df, stats):
@@ -126,6 +127,7 @@ if __name__ == '__main__':
     """
     Genera grafici degli indici di sobol.
     """
+    
     #region -- Controlliamo che i dati che ci servono siano presenti, altrimenti li andiamo a costruire
 
     # File richiesti
@@ -213,7 +215,7 @@ if __name__ == '__main__':
         'response_fn_12': 'Mass flow rate',
         'response_fn_4': 'Exit velocity',
         'response_fn_16': 'Exit crystal content',
-#        'response_fn28': 'Undercooling @Frag'
+        'response_fn_28': 'Undercooling @Frag'
     }
 
     plot_sobol_indices(
@@ -233,7 +235,7 @@ if __name__ == '__main__':
         'response_fn_12': 'Mass flow rate',
         'response_fn_4': 'Exit velocity',
         'response_fn_16': 'Exit crystal content',
-#        'response_fn28': 'Undercooling @Frag'
+        'response_fn_28': 'Undercooling @Frag'
     }
 
     plot_sobol_indices(

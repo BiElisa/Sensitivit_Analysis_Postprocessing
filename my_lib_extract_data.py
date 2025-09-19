@@ -268,6 +268,13 @@ def extract_data_at_frag(main_dir, bak_name, N, save_dir):
             reynolds_at_frag = (rho_mix_at_frag * u_mix_at_frag * radius * 2)/visc_at_frag
             
             ratio_u_mix_rel_at_frag = u_mix_at_frag / u_rel_at_frag
+
+            # EB : add
+
+            plag_liquidus_at_frag = -0.64 * (P_at_frag/1e6) + 1132 + 273
+            undercooling_at_frag = plag_liquidus_at_frag - T_at_frag
+
+            # EB : end
             
             # (6) Salvataggio dei risultati nel dizionario
             response_data['response_fn_20'][index_simul] = visc_at_frag
@@ -278,6 +285,7 @@ def extract_data_at_frag(main_dir, bak_name, N, save_dir):
             response_data['response_fn_25'][index_simul] = T_at_frag
             response_data['response_fn_26'][index_simul] = P_at_frag
             response_data['response_fn_27'][index_simul] = vesic_at_frag
+            response_data['response_fn_28'][index_simul] = undercooling_at_frag
             response_data['response_fn_30'][index_simul] = x_d_at_frag[0]
             response_data['response_fn_31'][index_simul] = x_d_at_frag[1]
             response_data['response_fn_32'][index_simul] = elong_strain_rate_at_frag
@@ -301,6 +309,7 @@ def extract_data_at_frag(main_dir, bak_name, N, save_dir):
         'response_fn_25': "Temperature at fragmentation [K]",
         'response_fn_26': "Pressure at fragmentation [Pa]",
         'response_fn_27': "Vesicularity at fragmentation [vol.]",
+        'response_fn_28': "Undercooling at fragmentation [K]",
         'response_fn_30': "Gas_1 diss. at fragmentation [wt.]",
         'response_fn_31': "Gas_2 diss. at fragmentation [wt.]",
         'response_fn_32': "Elongational strain rate at frag [1/s]",
