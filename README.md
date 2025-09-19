@@ -37,12 +37,20 @@ The script generates:
 
 These files are saved in the directory "csv_files".
 
-## Plot standard correlation plots
+## Plot correlation plots
 
 Execute the script "plot_correlation.py", for example by terminal:
 
 $ python plot_correlation.py 
 
-The script generates several figures which are saved in the directory "plot_correlations". The figure represent the correlation between several variables and their means. The user can modify the script in order to get the personalised correation plots.
+The script generates several figures which are saved in the directory "plot_correlations". The figure represent the correlation between several variables and their means. The user can modify the script in order to get the personalised correlation plots.
 
 Moreover, the sobol indices are plot, and the user can select which response_fn analyse.
+
+## Plot Sobol indices
+
+Execute the script "plot_sobol.py", for example by terminal:
+
+$ python plot_sobol.py 
+
+The script generates a figure which is saved in the directory "plot_Sobol". The user can modify the script in order to get the personalised plots. For example, the user can select which response_fn analyse.

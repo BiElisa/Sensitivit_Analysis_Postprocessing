@@ -513,7 +513,7 @@ def get_xi_labels_from_template(df, template_file):
 
     return xi_labels
 
-def transform_units_of_variables(df):
+#def transform_units_of_variables(df):
     """
     Applica trasformazioni di unità di misura al DataFrame in base
     alle etichette di unità presenti nella seconda riga di intestazione.
@@ -572,6 +572,7 @@ def plot_xi_vs_response_fn(
         y_label=None, 
         n_step=1,
         save_name=None,
+        save_dir="plot_files",
         fig_num=None,
         stats={},
     ):
@@ -641,6 +642,7 @@ def plot_xi_vs_response_fn(
         n_step=n_step,
         fig_num=fig_num,
         save_name=save_name,
+        save_dir=save_dir,
         stats=stats,
     )
 
@@ -653,6 +655,7 @@ def plot_lists(
     n_step=1,
     fig_num=None,
     save_name=None,
+    save_dir="plot_files",
     stats={}
 ):
     """
@@ -796,10 +799,9 @@ def plot_lists(
     plt.tight_layout()
 
     if save_name:
-        os.makedirs("plot_correlations", exist_ok=True)
-        path = os.path.join("plot_correlations", f"{save_name}.png")
-        plt.savefig(path, dpi=300)
-        print(f"Salvata figura in {path}")
+        os.makedirs(save_dir, exist_ok=True)
+        plt.savefig(os.path.join(save_dir, f"{save_name}.png"), dpi=300)
+        print(f"Figura salvata in {save_dir} as {save_name}")
 
     #plt.show(block=True)
     plt.pause(1.3)
@@ -906,116 +908,4 @@ def bin_and_average(df, N_bins=25):
             #print(stats)
 
     return stats
-
-def compute_sobol_indices(df, stats):
-    """
-    Calcola gli indici di Sobol di primo ordine normalizzati a partire dai risultati
-    di bin_and_average (stats).
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        DataFrame originale con tutte le colonne xi e response_fn.
-    stats : dict
-        Output di bin_and_average:
-        stats[xi][response_fn] = DataFrame con colonne ['mean', 'count', ...]
-        stats[xi]["bin_centers"] = array dei centri dei bin
-
-    Returns
-    -------
-    sobol_indices : dict
-        sobol_indices[response_fn] = array normalizzata degli indici di Sobol per ciascun xi
-    """
-
-    xi_cols = [col for col in df.columns if col[0].startswith("x")]
-    response_cols = [col for col in df.columns if col[0].startswith("response_fn")]
-
-    sobol_indices = {}
-
-    for resp in response_cols:
-        total_var = df[resp].var(ddof=0)  # varianza totale
-        indices = []
-
-        for xi in xi_cols:
-            try:
-                bin_means = stats[xi[0]][resp[0]]['mean']  # estrai medie per bin
-                var_bin = bin_means.var(ddof=0)           # varianza delle medie
-                # protezione divisione per zero
-                if total_var == 0:
-                    sobol_idx = 0.0
-                else:
-                    sobol_idx = var_bin / total_var # primo ordine
-            except KeyError:
-                sobol_idx = 0.0  # o np.nan se vuoi. Questo nel caso la statistica non sia disponibile
-            indices.append(sobol_idx)
-
-        indices = np.array(indices)
-        # normalizzazione
-        sum_indices = np.nansum(indices)
-        if sum_indices == 0:
-            normalized = indices  # tutti 0
-        else:
-            normalized = indices / sum_indices
-
-        sobol_indices[resp[0]] = normalized
-        
-    return sobol_indices
-
-def plot_sobol_indices(sobol_indices, xi_labels=None, response_labels=None, save_path=None):
-    """
-    Plotta gli Sobol indices normalizzati per più response_fn come stacked bar plot.
-
-    Parameters
-    ----------
-    sobol_indices : dict
-        Chiavi = nome della response_fn
-        Valori = array di Sobol indices normalizzati per ciascun xi
-    xi_labels : list of str, optional
-        Nomi delle variabili xi (default: x1, x2, ...)
-    response_labels : dict, optional
-        Etichette leggibili per ciascun response_fn
-    save_path : str, optional
-        Percorso dove salvare la figura (PNG)
-    """
-    if xi_labels is None:
-        xi_labels = ['x1','x2','x3','x4','x5','x6']
-
-    # responses_to_plot = list(sobol_indices.keys()) # questo fa plottare gli indici di tutte le respo_fn
-    # filtriamo le response_fn da plottare
-    responses_to_plot = list(response_labels.keys()) if response_labels else list(sobol_indices.keys())
-    n_resp = len(responses_to_plot)
-
-    fig, axes = plt.subplots(1, n_resp, figsize=(3*n_resp,5), sharey=True)
-    if n_resp == 1:
-        axes = [axes]
-
-    color_palette = plt.cm.tab20.colors
-
-    for ax, resp in zip(axes, responses_to_plot):
-        indices = np.array(sobol_indices.get(resp, np.zeros(len(xi_labels))))
-        bottom = np.zeros(1)
-        for i, val in enumerate(indices):
-            ax.bar(1, val, bottom=bottom.sum(), width=0.5, color=color_palette[i % len(color_palette)])
-            bottom[0] += val
-
-#        data = indices.reshape(1, -1)
-#        bplot = ax.bar(range(1,2), data, stacked=True, width=0.5, color=color_palette[:len(xi_labels)])
-
-        ax.set_xlim(0.5, 1.5)
-        ax.set_xticks([1])
-        ax.set_xticklabels([''])
-        ax.set_ylim(0,1)
-        ax.set_title(response_labels.get(resp, resp) if response_labels else resp)
-
-    # legenda solo nel primo subplot
-    axes[0].legend(xi_labels, loc='lower left', fontsize=9)
-    fig.suptitle('Sobol indices normalized', fontsize=14)
-    plt.tight_layout(rect=[0,0,1,0.95])
-
-    if save_path:
-        plt.savefig(os.path.join("plot_correlations", f"{save_path}.png"), dpi=300)
-        print(f"Figura salvata in {save_path}")
-
-    plt.show()
-    plt.close(fig)
 
