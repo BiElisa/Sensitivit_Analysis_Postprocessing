@@ -8,9 +8,7 @@ Be sure that the folder with the current scripts contains the following files:
 
 - dakota_tabular.dat
 - dakota_test_parallel.in
-- conduit_solver.template
-
-The current folder provides examples of those files (dakota_tabular_orig.dat, dakota_test_parallel_orig.in, conduit_solver_orig.template). Rename them by removing "_orig". 
+- conduit_solver.template 
 
 Moreover, you need to have a folder containing all the simulations resulting from the sensitivity analysis. The best structure could be having a folder "workdir" which contains other folders "workdir.1", "workdir.2", etc.
 
