@@ -36,7 +36,6 @@ The script generates:
 These files are saved in the directory "csv_files".
 
 ## Plot correlations
-## Plot correlations
 
 Execute the script "plot_correlation.py", for example by terminal:
 

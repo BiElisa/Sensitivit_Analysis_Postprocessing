@@ -1,0 +1,53 @@
+# 1D STEADY STEATE CONDUIT CODE MAMMA_Giuseppe_2022_12_22 La Palma - Sensitivty analyisis input parameters p, T, r, H2O, CO2
+environment,
+	#graphics
+    tabular_data
+
+method,
+   sampling
+    sample_type lhs
+    rng rnum2
+    samples = 1000
+    seed = 98251
+    distribution cumulative 
+    probability_levels = .01 .05 .25 .5 .75 .95 .99
+	 .01 .05 .25 .5 .75 .95 .99
+	 .01 .05 .25 .5 .75 .95 .99
+	 .01 .05 .25 .5 .75 .95 .99
+	 .01 .05 .25 .5 .75 .95 .99
+	 .01 .05 .25 .5 .75 .95 .99
+	 .01 .05 .25 .5 .75 .95 .99
+	 .01 .05 .25 .5 .75 .95 .99
+	 .01 .05 .25 .5 .75 .95 .99 
+	 .01 .05 .25 .5 .75 .95 .99
+	 .01 .05 .25 .5 .75 .95 .99
+	 .01 .05 .25 .5 .75 .95 .99
+	 .01 .05 .25 .5 .75 .95 .99
+	 .01 .05 .25 .5 .75 .95 .99
+	 .01 .05 .25 .5 .75 .95 .99
+
+variables,
+	uniform_uncertain = 6
+        lower_bounds = 36000000.0000 1381.000000 1.000000000 0.0050000000000 0.0010000000 0.0000000000
+        upper_bounds = 40000000.0000 1421.000000 6.000000000 0.0400000000000 0.0400000000 0.2000000000
+	descriptors  =    'x1'           'x2'          'x3'            'x4'         'x5'      'x6'
+
+interface,
+	system
+	asynchronous
+	evaluation_concurrency = 512
+	analysis_driver = 'simulator_script'
+	parameters_file = 'params.in'
+	results_file    = 'results.out'
+	work_directory named 'workdir/workdir' directory_tag file_save directory_save
+	copy_files = 'templatedir/*'
+	aprepro
+
+	  
+responses,
+    response_functions = 15
+    no_gradients
+    no_hessians
+		
+
+
