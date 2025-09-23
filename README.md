@@ -32,8 +32,9 @@ The script generates:
 6. data_at_vent.csv
 7. data_average_total.csv
 8. data_average.csv
+9. data_allConcat.csv
 
-These files are saved in the directory "csv_files".
+These files are saved in the directory "csv_files". Each column has two rows as header.
 
 ## Plot correlations
 

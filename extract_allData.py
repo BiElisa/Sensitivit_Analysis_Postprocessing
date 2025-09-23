@@ -26,7 +26,8 @@ def extract_allData (verbose = True, pause = True):
         print("Nessun file selezionato. Operazione annullata.")
     else:
 
-        #region -- Importiamo il tabellone generato da Dakota --
+        #region -- Importiamo il tabellone generato da Dakota 
+
         # Trova la cartella principale risalendo dal percorso del file selezionato
         # Ad esempio, da '.../workdir.1/file.bak' si ottiene '...'
         main_dir = os.path.dirname(os.path.dirname(filepath))
@@ -49,12 +50,15 @@ def extract_allData (verbose = True, pause = True):
 
         #endregion
 
-        # -- Puliamo il tabellone generato da dakota dalle simulazioni nulle --
+        #region -- Puliamo il tabellone generato da dakota dalle simulazioni nulle 
+        
         if verbose:
             print("Andiamo ad eliminare le simulazioni nulle.")
         df_dakota_clean, number_null_sim = rm.remove_null_simulations(df_dakota_output, "simulations.csv")
 
-        #region -- Aggiunta di nuove colonne a "simulations.csv--
+        #endregion
+
+        #region -- Aggiunta di nuove colonne al tabellone che salviamo come "simulations.csv
 
         # Total crystal content
         df_dakota_clean["response_fn_16"] = (
@@ -77,7 +81,7 @@ def extract_allData (verbose = True, pause = True):
         )
         #endregion
 
-        #region -- Aggiungiamo una seconda riga al tabellone per avere labels leggibili --
+        #region -- Aggiungiamo una seconda riga al tabellone per avere labels leggibili 
         
         # Trova tutte le colonne che iniziano con 'x'
         if verbose:
@@ -126,7 +130,7 @@ def extract_allData (verbose = True, pause = True):
             else:
                 labels_row.append(str(col))
 
-        # -- Salvataggio automatico CSV ---
+        # Salvataggio del tabellone come CSV file
         csv_dir = "csv_files"
         os.makedirs(csv_dir, exist_ok=True)
 
@@ -138,14 +142,15 @@ def extract_allData (verbose = True, pause = True):
             f.write(",".join(df_dakota_clean.columns) + "\n")
             f.write(",".join(labels_row) + "\n")
             df_dakota_clean.to_csv(f, index=False, encoding="utf-8") #  header=False,
-
-        #endregion
         
         if verbose:
             print(f"I dati delle simulazioni avvenute con successo vengono salvati in {save_path},\ndove ogni colonna ha doppia intestazione.")
             print("Passiamo ad estrapolare maggiori informazioni da questi dati.")
 
-        # Chiama le funzioni di estrazione, passando il percorso della cartella principale
+        #endregion
+
+        #region -- Estraz. dati @ framm, inlet, vent, average. Concatenazione col tabellone in "data_allConcat.csv"
+    
 
         read_csv_kwargs = {"header": [0,1], "encoding": "utf-8"}
 
@@ -175,7 +180,6 @@ def extract_allData (verbose = True, pause = True):
         extract.extract_data_average(main_dir, bak_name, N, csv_dir, filename_average)
         df_average = pd.read_csv(os.path.join(csv_dir,filename_average + ".csv"), **read_csv_kwargs)
 
-
         df_concat = pd.concat([df_dakota_output, df_fragmentation, df_inlet, df_vent, df_average], axis=1)
 
         #print(df_concat)
@@ -184,6 +188,7 @@ def extract_allData (verbose = True, pause = True):
         if verbose:
             print(f"\nI dati estratti fin'ora vengono tutti concatenati in 'data_allConcat.csv',\nun data frame dove ogni colonna ha doppia intestazione.")
 
+        #endregion
 
 
 
