@@ -235,14 +235,15 @@ if __name__ == '__main__':
         'response_fn_12': 'Mass flow rate',
         'response_fn_4': 'Exit velocity',
         'response_fn_16': 'Exit crystal content',
-        'response_fn_28': 'Undercooling @Frag'
+        'response_fn_28': 'Undercooling @Frag',
+        'response_fn_72': 'Avg. viscosity'
     }
 
     plot_sobol_indices(
         sobol_indices, 
         xi_labels=xi_labels, 
         response_labels=response_labels, 
-        save_name='sobol_indices',
+        save_name='sobol_indices_2',
         save_dir=save_dir
     )
 

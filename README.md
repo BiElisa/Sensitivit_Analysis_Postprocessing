@@ -10,11 +10,9 @@ Be sure that the folder with the current scripts contains the following files:
 - dakota_test_parallel.in
 - conduit_solver.template
 
-The current folder provides examples of those files (dakota_tabular_orig.dat, dakota_test_parallel_orig.in, conduit_solver_orig.template). Rename them by removing "_orig". 
-
 Moreover, you need to have a folder containing all the simulations resulting from the sensitivity analysis. The best structure could be having a folder "workdir" which contains other folders "workdir.1", "workdir.2", etc.
 
-## Execute the extraction of all the data from simulations results, files _p.std
+## Execute the extraction of all the data from simulations results, files p.std
 
 Execute the script "extract_allData.py", for example by terminal:
 
@@ -37,7 +35,7 @@ The script generates:
 
 These files are saved in the directory "csv_files".
 
-## Plot correlation plots
+## Plot correlations
 
 Execute the script "plot_correlation.py", for example by terminal:
 

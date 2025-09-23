@@ -310,6 +310,7 @@ def extract_data_at_frag(main_dir, bak_name, N, save_dir):
         'response_fn_26': "Pressure at fragmentation [Pa]",
         'response_fn_27': "Vesicularity at fragmentation [vol.]",
         'response_fn_28': "Undercooling at fragmentation [K]",
+        'response_fn_29': "Free space to save more info at fragm.",
         'response_fn_30': "Gas_1 diss. at fragmentation [wt.]",
         'response_fn_31': "Gas_2 diss. at fragmentation [wt.]",
         'response_fn_32': "Elongational strain rate at frag [1/s]",

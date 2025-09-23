@@ -66,7 +66,7 @@ def read_bak(pathname, filename):
 
     return variables
 
-def import_dakota_tabular_new(filename='dakota_tabular.dat'):
+def import_dakota_tabular_new(filename='dakota_tabular.dat'): # forse potrebbe stare in extract_allData
     """
     Importa dati dal file dakota_tabular.dat utilizzando pandas.
     
