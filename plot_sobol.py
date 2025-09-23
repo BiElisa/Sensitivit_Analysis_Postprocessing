@@ -141,7 +141,8 @@ if __name__ == '__main__':
         "data_at_vent_total.csv",
         "data_at_vent.csv",
         "data_average_total.csv",
-        "data_average.csv"
+        "data_average.csv",
+        "data_allConcat.csv"
     ]
 
     # Cartelle
@@ -183,20 +184,7 @@ if __name__ == '__main__':
 
     csv_dir = "csv_files"  
 
-    df_dakota_output = pd.read_csv(os.path.join(csv_dir,"simulations.csv"), **read_csv_kwargs)
-
-    df_fragmentation = pd.read_csv(os.path.join(csv_dir,"data_at_fragmentation.csv"), **read_csv_kwargs)
-
-    df_inlet = pd.read_csv(os.path.join(csv_dir,"data_at_inlet.csv"), **read_csv_kwargs)
-
-    df_vent = pd.read_csv(os.path.join(csv_dir,"data_at_vent.csv"), **read_csv_kwargs)
-
-    df_average = pd.read_csv(os.path.join(csv_dir,"data_average.csv"), **read_csv_kwargs)
-
-    df_concat = pd.concat([df_dakota_output, df_fragmentation, df_inlet, df_vent, df_average], axis=1)
-    
-    #print(df_concat)
-    df_concat.to_csv(os.path.join(csv_dir,'data_allConcat.csv'), index=False)
+    df_concat = pd.read_csv(os.path.join(csv_dir,"data_allConcat.csv"), **read_csv_kwargs)
 
     #endregion
 

@@ -1,6 +1,7 @@
 import os
 import tkinter as tk
 from tkinter import filedialog
+import pandas as pd
 import numpy as np
 import sys
 import argparse
@@ -126,17 +127,17 @@ def extract_allData (verbose = True, pause = True):
                 labels_row.append(str(col))
 
         # -- Salvataggio automatico CSV ---
-        save_dir = "csv_files"
-        os.makedirs(save_dir, exist_ok=True)
+        csv_dir = "csv_files"
+        os.makedirs(csv_dir, exist_ok=True)
 
-        filename_with_labels = "simulations.csv"
-        save_path = os.path.join(save_dir, filename_with_labels)
+        filename_simulations = "simulations.csv"
+        save_path = os.path.join(csv_dir, filename_simulations)
 
         # Salva con doppia intestazione
         with open(save_path, "w", encoding="utf-8", newline='') as f:
             f.write(",".join(df_dakota_clean.columns) + "\n")
             f.write(",".join(labels_row) + "\n")
-            df_dakota_clean.to_csv(f, index=False, header=False, encoding="utf-8")
+            df_dakota_clean.to_csv(f, index=False, encoding="utf-8") #  header=False,
 
         #endregion
         
@@ -145,21 +146,43 @@ def extract_allData (verbose = True, pause = True):
             print("Passiamo ad estrapolare maggiori informazioni da questi dati.")
 
         # Chiama le funzioni di estrazione, passando il percorso della cartella principale
+
+        read_csv_kwargs = {"header": [0,1], "encoding": "utf-8"}
+
+        df_dakota_output = pd.read_csv(os.path.join(csv_dir, filename_simulations), **read_csv_kwargs)
+
+        filename_at_frag = "data_at_fragmentation"
         if pause:
             input("\nCerchiamo oppure creiamo le informazioni alla frammentazione...")
-        extract.extract_data_at_frag(main_dir, bak_name, N, save_dir)
+        extract.extract_data_at_frag(main_dir, bak_name, N, csv_dir, filename_at_frag)
+        df_fragmentation = pd.read_csv(os.path.join(csv_dir, filename_at_frag + ".csv"), **read_csv_kwargs)
         
+        filename_at_inlet = "data_at_inlet"
         if pause:
             input("\nCerchiamo oppure creiamo le informazioni all'inlet...")
-        extract.extract_data_at_inlet(main_dir, bak_name, N, save_dir)
+        extract.extract_data_at_inlet(main_dir, bak_name, N, csv_dir, filename_at_inlet)
+        df_inlet = pd.read_csv(os.path.join(csv_dir, filename_at_inlet + ".csv"), **read_csv_kwargs)
         
+        filename_at_vent = "data_at_vent"
         if pause:
             input("\nCerchiamo oppure creiamo le informazioni al vent...")
-        extract.extract_data_at_vent(main_dir, bak_name, N, save_dir)
+        extract.extract_data_at_vent(main_dir, bak_name, N, csv_dir, filename_at_vent)
+        df_vent = pd.read_csv(os.path.join(csv_dir, filename_at_vent + ".csv"), **read_csv_kwargs)
 
+        filename_average = "data_average"
         if pause:
             input("\nCerchiamo oppure creiamo le informazioni averaged...")
-        extract.extract_data_average(main_dir, bak_name, N, save_dir)
+        extract.extract_data_average(main_dir, bak_name, N, csv_dir, filename_average)
+        df_average = pd.read_csv(os.path.join(csv_dir,filename_average + ".csv"), **read_csv_kwargs)
+
+
+        df_concat = pd.concat([df_dakota_output, df_fragmentation, df_inlet, df_vent, df_average], axis=1)
+
+        #print(df_concat)
+        df_concat.to_csv(os.path.join(csv_dir,'data_allConcat.csv'), index=False)
+
+        if verbose:
+            print(f"\nI dati estratti fin'ora vengono tutti concatenati in 'data_allConcat.csv',\nun data frame dove ogni colonna ha doppia intestazione.")
 
 
 

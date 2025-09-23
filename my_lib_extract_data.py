@@ -25,7 +25,7 @@ def check_existance_of_csv_files(filename_total,filename_clean,save_dir,name_pro
         print(f"'{filename_total}' non trovato: la funzione {name_program} deve essere eseguita.")
         return True
 
-def extract_data_at_frag(main_dir, bak_name, N, save_dir):
+def extract_data_at_frag(main_dir, bak_name, N, save_dir, name_file):
     """
     Estrae i dati da tutti i file .bak e .std contenuti nelle cartelle workdir.N.
     
@@ -34,8 +34,8 @@ def extract_data_at_frag(main_dir, bak_name, N, save_dir):
         bak_name (str): Il nome del file .bak di riferimento (es. Piton_Emb2.bak).
     """
 
-    filename_total = "data_at_fragmentation_total.csv"
-    filename_clean = "data_at_fragmentation.csv"
+    filename_total = name_file + "_total.csv"
+    filename_clean = name_file + ".csv"
 
     do_it = check_existance_of_csv_files(filename_total,filename_clean,save_dir,extract_data_at_frag.__name__)
 
@@ -337,7 +337,7 @@ def extract_data_at_frag(main_dir, bak_name, N, save_dir):
     rm.remove_null_simulations(filename_total, filename_clean, save_dir)
 
 
-def extract_data_at_inlet(main_dir, bak_name, N, save_dir):
+def extract_data_at_inlet(main_dir, bak_name, N, save_dir, name_file):
     """
     Estrae i dati relativi all'inlet da tutti i file .bak e .std. nelle cartelle workdir.N.
 
@@ -346,8 +346,8 @@ def extract_data_at_inlet(main_dir, bak_name, N, save_dir):
         bak_name (str): Il nome del file .bak di riferimento.
     """
 
-    filename_total = "data_at_inlet_total.csv"
-    filename_clean = "data_at_inlet.csv"
+    filename_total = name_file + "_total.csv"
+    filename_clean = name_file + ".csv"
 
     do_it = check_existance_of_csv_files(filename_total,filename_clean,save_dir,extract_data_at_frag.__name__)
 
@@ -465,7 +465,7 @@ def extract_data_at_inlet(main_dir, bak_name, N, save_dir):
     rm.remove_null_simulations(filename_total, filename_clean, save_dir)
 
 
-def extract_data_at_vent (main_dir, bak_name, N, save_dir):
+def extract_data_at_vent (main_dir, bak_name, N, save_dir, name_file):
     """
     Estrae i dati da tutti i file .bak e .std contenuti nelle cartelle workdir.N.
     
@@ -474,8 +474,8 @@ def extract_data_at_vent (main_dir, bak_name, N, save_dir):
         bak_name (str): Il nome del file .bak di riferimento (es. Piton_Emb2.bak).
     """
     
-    filename_total = "data_at_vent_total.csv"
-    filename_clean = "data_at_vent.csv"
+    filename_total = name_file + "_total.csv"
+    filename_clean = name_file + ".csv"
 
     do_it = check_existance_of_csv_files(filename_total,filename_clean,save_dir,extract_data_at_frag.__name__)
 
@@ -654,7 +654,7 @@ def extract_data_at_vent (main_dir, bak_name, N, save_dir):
     rm.remove_null_simulations(filename_total, filename_clean, save_dir)
 
 
-def extract_data_average (main_dir, bak_name, N, save_dir):
+def extract_data_average (main_dir, bak_name, N, save_dir, name_file):
     """
     Estrae i dati da tutti i file .bak e .std contenuti nelle cartelle workdir.N.
     
@@ -663,8 +663,8 @@ def extract_data_average (main_dir, bak_name, N, save_dir):
         bak_name (str): Il nome del file .bak di riferimento (es. Piton_Emb2.bak).
     """
 
-    filename_total = "data_average_total.csv"
-    filename_clean = "data_average.csv"
+    filename_total = name_file + "_total.csv"
+    filename_clean = name_file + ".csv"
 
     do_it = check_existance_of_csv_files(filename_total,filename_clean,save_dir,extract_data_at_frag.__name__)
 
@@ -805,3 +805,4 @@ def extract_data_average (main_dir, bak_name, N, save_dir):
 
     # Rimuoviamo le simulazini nulle
     rm.remove_null_simulations(filename_total, filename_clean, save_dir)
+

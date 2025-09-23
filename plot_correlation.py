@@ -23,7 +23,8 @@ if __name__ == '__main__':
         "data_at_vent_total.csv",
         "data_at_vent.csv",
         "data_average_total.csv",
-        "data_average.csv"
+        "data_average.csv",
+        "data_allConcat.csv"
     ]
 
     # Cartelle
@@ -65,29 +66,9 @@ if __name__ == '__main__':
 
     csv_dir = "csv_files"  
 
-    df_dakota_output = pd.read_csv(os.path.join(csv_dir,"simulations.csv"), **read_csv_kwargs)
-
-    df_fragmentation = pd.read_csv(os.path.join(csv_dir,"data_at_fragmentation.csv"), **read_csv_kwargs)
-
-    df_inlet = pd.read_csv(os.path.join(csv_dir,"data_at_inlet.csv"), **read_csv_kwargs)
-
-    df_vent = pd.read_csv(os.path.join(csv_dir,"data_at_vent.csv"), **read_csv_kwargs)
-
-    df_average = pd.read_csv(os.path.join(csv_dir,"data_average.csv"), **read_csv_kwargs)
-
-    df_concat = pd.concat([df_dakota_output, df_fragmentation, df_inlet, df_vent, df_average], axis=1)
-
-    #print(df_concat)
-    df_concat.to_csv(os.path.join(csv_dir,'data_allConcat.csv'), index=False)
-
-#    df_transformed = utils.transform_units_of_variables(df_concat)
+    df_concat = pd.read_csv(os.path.join(csv_dir,"data_allConcat.csv"), **read_csv_kwargs)
 
     df_boundsInfo, input_Min, input_Max = utils.import_dakota_bounds()
-
-    # Applica le stesse trasformazioni delle colonne di df_transformed
-    #adj_input_Min, adj_input_Max = utils.adjust_bounds_with_units(input_Min, input_Max, df_concat)
-    #print(f'\nadj_input_Min = {adj_input_Min}')
-    #print(f'adj_input_Max = {adj_input_Max}\n')
 
     #endregion
 
