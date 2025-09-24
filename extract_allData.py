@@ -7,7 +7,6 @@ import sys
 import argparse
 import my_lib_extract_data as extract
 import my_lib_process_utils as utils
-import my_lib_remove_simulations_from_csv as rm
 
 def extract_allData (verbose = True, pause = True):
 
@@ -20,7 +19,6 @@ def extract_allData (verbose = True, pause = True):
         title="Seleziona un file '.bak' da una cartella workdir.N",
         filetypes=[("Bak files", "*.bak")]
     )
-
 
     if not filepath:
         print("Nessun file selezionato. Operazione annullata.")
@@ -44,9 +42,9 @@ def extract_allData (verbose = True, pause = True):
     if df_dakota_output is None:
         sys.exit()
 
-    N = len(df_dakota_output)
+    number_tot_sim = len(df_dakota_output)
     if verbose:
-        print(f"Totale simulazioni trovate {N}.")
+        print(f"Totale simulazioni trovate {number_tot_sim}.")
 
     #endregion
 
@@ -54,7 +52,10 @@ def extract_allData (verbose = True, pause = True):
         
     if verbose:
         print("Andiamo ad eliminare le simulazioni nulle.")
-    df_dakota_clean, number_null_sim = rm.remove_null_simulations(df_dakota_output, "simulations.csv")
+
+    mask_invalid = (df_dakota_output["response_fn_1"] == -1) | (df_dakota_output["response_fn_12"] > 5e9)
+
+    df_dakota_clean = df_dakota_output.loc[~mask_invalid].reset_index(drop=True)
 
     #endregion
 
@@ -128,8 +129,9 @@ def extract_allData (verbose = True, pause = True):
             labels_row.append(str(response_labels[col]))
         else:
             labels_row.append(str(col))
+    #endregion
 
-    # Salvataggio del tabellone come CSV file
+    #region -- Salvataggio del tabellone cosi` composto come CSV file
     csv_dir = "csv_files"
     os.makedirs(csv_dir, exist_ok=True)
 
@@ -141,10 +143,13 @@ def extract_allData (verbose = True, pause = True):
         f.write(",".join(df_dakota_clean.columns) + "\n")
         f.write(",".join(labels_row) + "\n")
         df_dakota_clean.to_csv(f, index=False, header=False, encoding="utf-8")
+
+    print(f"I dati delle simulazioni avvenute con successo vengono salvati in '{save_path}/{filename_simulations}.csv'.")
+    print(f"{number_tot_sim - mask_invalid.sum()} simulazioni valide, {mask_invalid.sum()} eliminate perche` nulle.")
+    print("I data frame generati da questo programma hanno doppia intestazione.\n")
         
     if verbose:
-        print(f"I dati delle simulazioni avvenute con successo vengono salvati in {save_path},\ndove ogni colonna ha doppia intestazione.")
-        print("Passiamo ad estrapolare maggiori informazioni da questi dati.")
+        print(" --- Passiamo ad estrapolare maggiori informazioni. ---\n")
 
     #endregion
 
@@ -152,7 +157,7 @@ def extract_allData (verbose = True, pause = True):
 
     read_csv_kwargs = {"header": [0,1], "encoding": "utf-8"}
 
-    df_dakota_output = pd.read_csv(os.path.join(csv_dir, filename_simulations + ".csv"), **read_csv_kwargs)
+    df_dakota_clean = pd.read_csv(os.path.join(csv_dir, filename_simulations + ".csv"), **read_csv_kwargs)
 
     filename_at_frag  = "data_at_fragmentation"
     filename_at_inlet = "data_at_inlet"
@@ -160,88 +165,146 @@ def extract_allData (verbose = True, pause = True):
     filename_average  = "data_average"
 
     if pause:
-        input("\nCerchiamo oppure creiamo le informazioni alla frammentazione...")
-    extract.extract_data_at_frag(main_dir, bak_name, N, csv_dir, filename_at_frag)
+        input("Cerchiamo oppure creiamo le informazioni alla frammentazione...")
+    extract.extract_data_at_frag(main_dir, bak_name, number_tot_sim, csv_dir, filename_at_frag)
     df_fragmentation = pd.read_csv(os.path.join(csv_dir, filename_at_frag + ".csv"), **read_csv_kwargs)
         
     if pause:
-        input("\nCerchiamo oppure creiamo le informazioni all'inlet...")
-    extract.extract_data_at_inlet(main_dir, bak_name, N, csv_dir, filename_at_inlet)
+        input("Cerchiamo oppure creiamo le informazioni all'inlet...")
+    extract.extract_data_at_inlet(main_dir, bak_name, number_tot_sim, csv_dir, filename_at_inlet)
     df_inlet = pd.read_csv(os.path.join(csv_dir, filename_at_inlet + ".csv"), **read_csv_kwargs)
         
     if pause:
-        input("\nCerchiamo oppure creiamo le informazioni al vent...")
-    extract.extract_data_at_vent(main_dir, bak_name, N, csv_dir, filename_at_vent)
+        input("Cerchiamo oppure creiamo le informazioni al vent...")
+    extract.extract_data_at_vent(main_dir, bak_name, number_tot_sim, csv_dir, filename_at_vent)
     df_vent = pd.read_csv(os.path.join(csv_dir, filename_at_vent + ".csv"), **read_csv_kwargs)
 
     if pause:
-        input("\nCerchiamo oppure creiamo le informazioni averaged...")
-    extract.extract_data_average(main_dir, bak_name, N, csv_dir, filename_average)
+        input("Cerchiamo oppure creiamo le informazioni averaged...")
+    extract.extract_data_average(main_dir, bak_name, number_tot_sim, csv_dir, filename_average)
     df_average = pd.read_csv(os.path.join(csv_dir,filename_average + ".csv"), **read_csv_kwargs)
 
-    df_concat = pd.concat([df_dakota_output, df_fragmentation, df_inlet, df_vent, df_average], axis=1)
+    df_concat = pd.concat([df_dakota_clean, df_fragmentation, df_inlet, df_vent, df_average], axis=1)
 
     #print(df_concat)
     df_concat.to_csv(os.path.join(csv_dir,'data_allConcat.csv'), index=False)
 
     if verbose:
-        print(f"\nI dati estratti fin'ora vengono tutti concatenati in 'data_allConcat.csv',data frame dove ogni colonna ha doppia intestazione.\n")
+        print(f"- I dati ottenuti vengono concatenati e salvati in 'data_allConcat.csv'.\n")
 
     #endregion
 
     #region -- Selezioniamo solo le simulazioni esplosive
 
-    mask_explosive = df_dakota_output[("response_fn_15", "Fragmentation depth [m]")] > -0.5
+    mask_explosive = df_dakota_clean[("response_fn_15", "Fragmentation depth [m]")] > -0.5
 
-    df_dakota_output_expl = df_dakota_output[mask_explosive]
+    df_dakota_clean_expl = df_dakota_clean[mask_explosive]
     df_fragmentation_expl = df_fragmentation[mask_explosive]
     df_inlet_expl         = df_inlet[mask_explosive]
     df_vent_expl          = df_vent[mask_explosive]
     df_average_expl       = df_average[mask_explosive]
 
-    df_dakota_output_expl.to_csv(os.path.join(csv_dir, filename_simulations + "_explosive.csv"), index=False, encoding="utf-8")
-    df_fragmentation_expl.to_csv(os.path.join(csv_dir, filename_at_frag + "_explosive.csv"), index=False, encoding="utf-8")
-    df_inlet_expl.to_csv(os.path.join(csv_dir, filename_at_inlet + "_explosive.csv"), index=False, encoding="utf-8")
-    df_vent_expl.to_csv(os.path.join(csv_dir, filename_at_vent + "_explosive.csv"), index=False, encoding="utf-8")
-    df_average_expl.to_csv(os.path.join(csv_dir, filename_average + "_explosive.csv"), index=False, encoding="utf-8")
+    suffix = "_explosive.csv"
+
+    df_dakota_clean_expl.to_csv(os.path.join(csv_dir, filename_simulations + suffix), index=False, encoding="utf-8")
+    df_fragmentation_expl.to_csv(os.path.join(csv_dir, filename_at_frag + suffix), index=False, encoding="utf-8")
+    df_inlet_expl.to_csv(os.path.join(csv_dir, filename_at_inlet + suffix), index=False, encoding="utf-8")
+    df_vent_expl.to_csv(os.path.join(csv_dir, filename_at_vent + suffix), index=False, encoding="utf-8")
+    df_average_expl.to_csv(os.path.join(csv_dir, filename_average + suffix), index=False, encoding="utf-8")
+
+    print(f"Estratte le {mask_explosive.sum()} simulazioni esplosive e salvate nei rispettivi file '*{suffix}'.  ")
     
-    df_concat_expl = pd.concat([df_dakota_output_expl, df_fragmentation_expl, df_inlet_expl, df_vent_expl, df_average_expl], axis=1)
+    df_concat_expl = pd.concat([df_dakota_clean_expl, df_fragmentation_expl, df_inlet_expl, df_vent_expl, df_average_expl], axis=1)
 
-    #print(df_concat)
-    df_concat_expl.to_csv(os.path.join(csv_dir,'data_allConcat_explosive.csv'), index=False)
+    df_concat_expl.to_csv(os.path.join(csv_dir,'data_allConcat' + suffix), index=False)
 
-    print(f"Estratte le {mask_explosive.sum()} simulazioni esplosive e salvate nei rispettivi file '**_explosive.csv'. \n ")
+    print(f" - I dati vengono concatenati e salvati in 'data_allConcat{suffix}'. \n ")
 
     #endregion
 
-    input('...')
-
     #region -- Selezioniamo solo le simulazioni NON esplosive
 
-    mask_notExplosive = (df_dakota_output[("response_fn_15", "Fragmentation depth [m]")] < 0) | (df_dakota_output[("response_fn_1", "Total Gas volume fraction")] < 0.6)
+    mask_notExplosive = (df_dakota_clean[("response_fn_15", "Fragmentation depth [m]")] < 0) | (df_dakota_clean[("response_fn_1", "Total Gas volume fraction")] < 0.6)
 
-    df_dakota_output_notExpl = df_dakota_output[mask_notExplosive]
+    df_dakota_clean_notExpl = df_dakota_clean[mask_notExplosive]
     df_fragmentation_notExpl = df_fragmentation[mask_notExplosive]
     df_inlet_notExpl         = df_inlet[mask_notExplosive]
     df_vent_notExpl          = df_vent[mask_notExplosive]
     df_average_notExpl       = df_average[mask_notExplosive]
 
-    df_dakota_output_notExpl.to_csv(os.path.join(csv_dir, filename_simulations + "_notExplosive.csv"), index=False, encoding="utf-8")
-    df_fragmentation_notExpl.to_csv(os.path.join(csv_dir, filename_at_frag + "_notExplosive.csv"), index=False, encoding="utf-8")
-    df_inlet_notExpl.to_csv(os.path.join(csv_dir, filename_at_inlet + "_notExplosive.csv"), index=False, encoding="utf-8")
-    df_vent_notExpl.to_csv(os.path.join(csv_dir, filename_at_vent + "_notExplosive.csv"), index=False, encoding="utf-8")
-    df_average_notExpl.to_csv(os.path.join(csv_dir, filename_average + "_notExplosive.csv"), index=False, encoding="utf-8")
+    suffix = "_notExplosive.csv"
+
+    df_dakota_clean_notExpl.to_csv(os.path.join(csv_dir, filename_simulations + suffix), index=False, encoding="utf-8")
+    df_fragmentation_notExpl.to_csv(os.path.join(csv_dir, filename_at_frag + suffix), index=False, encoding="utf-8")
+    df_inlet_notExpl.to_csv(os.path.join(csv_dir, filename_at_inlet + suffix), index=False, encoding="utf-8")
+    df_vent_notExpl.to_csv(os.path.join(csv_dir, filename_at_vent + suffix), index=False, encoding="utf-8")
+    df_average_notExpl.to_csv(os.path.join(csv_dir, filename_average + suffix), index=False, encoding="utf-8")
+
+    print(f"Estratte le {mask_notExplosive.sum()} simulazioni esplosive e salvate nei rispettivi file '*{suffix}'.  ")
     
-    df_concat_notExpl = pd.concat([df_dakota_output_notExpl, df_fragmentation_notExpl, df_inlet_notExpl, df_vent_notExpl, df_average_notExpl], axis=1)
+    df_concat_notExpl = pd.concat([df_dakota_clean_notExpl, df_fragmentation_notExpl, df_inlet_notExpl, df_vent_notExpl, df_average_notExpl], axis=1)
 
-    #print(df_concat)
-    df_concat_notExpl.to_csv(os.path.join(csv_dir,'data_allConcat_notExplosive.csv'), index=False)
+    df_concat_notExpl.to_csv(os.path.join(csv_dir,'data_allConcat' + suffix), index=False)
 
-    print(f"Estratte le {mask_notExplosive.sum()} simulazioni esplosive e salvate in file '**_notExplosive.csv'. \n ")
+    print(f" - I dati vengono concatenati e salvati in 'data_allConcat{suffix}'. \n ")
 
     #endregion
 
+    #region -- Selezioniamo solo le simulazioni effusive (NON esplosive)
 
+    mask_effusive = df_dakota_clean_notExpl[("response_fn_19", "Fragmentation length scale [m]")] <= 0.1
+
+    df_dakota_clean_eff = df_dakota_clean[mask_effusive]
+    df_fragmentation_eff = df_fragmentation[mask_effusive]
+    df_inlet_eff         = df_inlet[mask_effusive]
+    df_vent_eff          = df_vent[mask_effusive]
+    df_average_eff       = df_average[mask_effusive]
+
+    suffix = "_notExplosive_effusive.csv"
+
+    df_dakota_clean_eff.to_csv(os.path.join(csv_dir, filename_simulations + suffix), index=False, encoding="utf-8")
+    df_fragmentation_eff.to_csv(os.path.join(csv_dir, filename_at_frag + suffix), index=False, encoding="utf-8")
+    df_inlet_eff.to_csv(os.path.join(csv_dir, filename_at_inlet + suffix), index=False, encoding="utf-8")
+    df_vent_eff.to_csv(os.path.join(csv_dir, filename_at_vent + suffix), index=False, encoding="utf-8")
+    df_average_eff.to_csv(os.path.join(csv_dir, filename_average + suffix), index=False, encoding="utf-8")
+
+    print(f"Estratte le {mask_effusive.sum()} simulazioni effusive e salvate nei rispettivi file '*{suffix}'. ")
+    
+    df_concat_eff = pd.concat([df_dakota_clean_eff, df_fragmentation_eff, df_inlet_eff, df_vent_eff, df_average_eff], axis=1)
+
+    df_concat_eff.to_csv(os.path.join(csv_dir,'data_allConcat' + suffix), index=False)
+
+    print(f" - I dati vengono concatenati e salvati in 'data_allConcat{suffix}'. \n ")
+
+    #endregion
+
+    #region -- Selezioniamo solo le simulazioni fontanamento (NON esplosive)
+
+    mask_fountaining = df_dakota_clean_notExpl[("response_fn_19", "Fragmentation length scale [m]")] > 0.1
+
+    df_dakota_clean_fount = df_dakota_clean[mask_fountaining]
+    df_fragmentation_fount = df_fragmentation[mask_fountaining]
+    df_inlet_fount         = df_inlet[mask_fountaining]
+    df_vent_fount          = df_vent[mask_fountaining]
+    df_average_fount       = df_average[mask_fountaining]
+
+    suffix = "_notExplosive_fountaining.csv"
+
+    df_dakota_clean_fount.to_csv(os.path.join(csv_dir, filename_simulations + suffix), index=False, encoding="utf-8")
+    df_fragmentation_fount.to_csv(os.path.join(csv_dir, filename_at_frag + suffix), index=False, encoding="utf-8")
+    df_inlet_fount.to_csv(os.path.join(csv_dir, filename_at_inlet + suffix), index=False, encoding="utf-8")
+    df_vent_fount.to_csv(os.path.join(csv_dir, filename_at_vent + suffix), index=False, encoding="utf-8")
+    df_average_fount.to_csv(os.path.join(csv_dir, filename_average + suffix), index=False, encoding="utf-8")
+    
+    print(f"Estratte le {mask_fountaining.sum()} simulazioni fontanamento e salvate nei rispettivi file '*{suffix}'.")
+    
+    df_concat_fount = pd.concat([df_dakota_clean_eff, df_fragmentation_eff, df_inlet_eff, df_vent_eff, df_average_eff], axis=1)
+
+    df_concat_fount.to_csv(os.path.join(csv_dir,'data_allConcat' + suffix), index=False)
+
+    print(f" - I dati vengono concatenati e salvati in 'data_allConcat{suffix}'. \n ")
+
+    #endregion
 
 
 

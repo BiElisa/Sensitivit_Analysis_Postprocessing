@@ -14,7 +14,7 @@ def check_existance_of_csv_files(filename_total,filename_clean,save_dir,name_pro
         
         if os.path.exists(path_file_clean):
             print(f"'{filename_clean}' esiste già")
-            print(f"La funzione {name_program} non verrà eseguita.")
+            print(f"La funzione {name_program} non verrà eseguita. \n")
             return False # nothing to do
         
         print(f"'{filename_clean}' invece va creato")

@@ -22,17 +22,46 @@ You can also use two input parameters "verbose" and "pause", for example:
 
 $ python extract_allData.py --verbose true --pause false
 
-The script generates:
+The script generates, in order, the following 34 files:
 
-1. data_at_fragmentation_total.csv
-2. data_at_fragmentation.csv
-3. data_at_inlet_total.csv
-4. data_at_inlet.csv
-5. data_at_vent_total.csv
-6. data_at_vent.csv
-7. data_average_total.csv
-8. data_average.csv
-9. data_allConcat.csv
+* simulations.csv
+* data_at_fragmentation_total.csv
+* data_at_fragmentation.csv
+* data_at_inlet_total.csv
+* data_at_inlet.csv
+* data_at_vent_total.csv
+* data_at_vent.csv
+* data_average_total.csv
+* data_average.csv
+* data_allConcat.csv
+
+* simulations_explosive.csv
+* data_at_fragmentation_explosive.csv
+* data_at_inlet_explosive.csv
+* data_at_vent_explosive.csv
+* data_average_explosive.csv
+* data_allConcat_explosive.csv
+
+* simulations_notExplosive.csv
+* data_at_fragmentation_notExplosive.csv
+* data_at_inlet_notExplosive.csv
+* data_at_vent_notExplosive.csv
+* data_average_notExplosive.csv
+* data_allConcat_notExplosive.csv
+
+* simulations_notExplosive_effusive.csv
+* data_at_fragmentation_notExplosive_effusive.csv
+* data_at_inlet_notExplosive_effusive.csv
+* data_at_vent_notExplosive_effusive.csv
+* data_average_notExplosive_effusive.csv
+* data_allConcat_notExplosive_effusive.csv
+
+* simulations_notExplosive_fountaining.csv
+* data_at_fragmentation_notExplosive_fountaining.csv
+* data_at_inlet_notExplosive_fountaining.csv
+* data_at_vent_notExplosive_fountaining.csv
+* data_average_notExplosive_fountaining.csv
+* data_allConcat_notExplosive_fountaining.csv
 
 These files are saved in the directory "csv_files". Each column has two rows as header.
 

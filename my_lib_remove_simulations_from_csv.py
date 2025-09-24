@@ -58,7 +58,7 @@ def remove_null_simulations(input_filename, output_filename, save_dir="csv_files
             df_clean.to_csv(f_out, index=False, header=False)
     else:
         df_clean.to_csv(output_path, index=False)
-    print(f"Salvato '{output_path}' ({len(df_clean)} simulazioni valide, {number_null_sim} eliminate perche` nulle).")
+    print(f"Salvato '{output_path}' ({len(df_clean)} simulazioni valide, {number_null_sim} eliminate perche` nulle).\n")
 
     return df_clean, number_null_sim
 
