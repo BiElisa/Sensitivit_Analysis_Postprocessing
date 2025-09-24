@@ -282,7 +282,7 @@ def extract_allData (verbose = True, pause = True):
 
     mask_fountaining = df_dakota_clean_notExpl[("response_fn_19", "Fragmentation length scale [m]")] > 0.1
 
-    df_dakota_clean_fount = df_dakota_clean[mask_fountaining]
+    df_dakota_clean_fount  = df_dakota_clean[mask_fountaining]
     df_fragmentation_fount = df_fragmentation[mask_fountaining]
     df_inlet_fount         = df_inlet[mask_fountaining]
     df_vent_fount          = df_vent[mask_fountaining]

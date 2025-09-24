@@ -15,16 +15,11 @@ if __name__ == '__main__':
     # File richiesti
     mandatory_file = "dakota_test_parallel.in"
     other_files = [
-        "simulations.csv", 
-        "data_at_fragmentation_total.csv",
-        "data_at_fragmentation.csv",
-        "data_at_inlet_total.csv",
-        "data_at_inlet.csv",
-        "data_at_vent_total.csv",
-        "data_at_vent.csv",
-        "data_average_total.csv",
-        "data_average.csv",
-        "data_allConcat.csv"
+        "data_allConcat.csv",
+        "data_allConcat_explosive.csv",
+        "data_allConcat_notExplosive.csv",
+        "data_allConcat_notExplosive_effusive.csv",
+        "data_allConcat_notExplosive_fountaining.csv",
     ]
 
     # Cartelle
@@ -56,7 +51,6 @@ if __name__ == '__main__':
         print(f"The following files are missing from both current folder and '{csv_dir}': {missing}")
         print("The script 'extract_allData.py' is executed.")
         subprocess.run(["python", "extract_allData.py", "--pause", "false"])
-    
 
     #endregion
 
@@ -66,19 +60,31 @@ if __name__ == '__main__':
 
     csv_dir = "csv_files"  
 
-    df_concat = pd.read_csv(os.path.join(csv_dir,"data_allConcat.csv"), **read_csv_kwargs)
+    df_concat         = pd.read_csv(os.path.join(csv_dir,"data_allConcat.csv"), **read_csv_kwargs)
+    df_concat_expl    = pd.read_csv(os.path.join(csv_dir,"data_allConcat_explosive.csv"), **read_csv_kwargs)
+    df_concat_notExpl = pd.read_csv(os.path.join(csv_dir,"data_allConcat_notExplosive.csv"), **read_csv_kwargs)
+    df_concat_eff     = pd.read_csv(os.path.join(csv_dir,"data_allConcat_notExplosive_effusive.csv"), **read_csv_kwargs)
+    df_concat_fount   = pd.read_csv(os.path.join(csv_dir,"data_allConcat_notExplosive_fountaining.csv"), **read_csv_kwargs)
 
     df_boundsInfo, input_Min, input_Max = utils.import_dakota_bounds()
 
     #endregion
 
-    stats = utils.bin_and_average(df_concat, N_bins=25)
+    N_bins = 25
+    stats         = utils.bin_and_average(df_concat, N_bins)
+    stats_expl    = utils.bin_and_average(df_concat_expl, N_bins)
+    stats_notExpl = utils.bin_and_average(df_concat_notExpl, N_bins)
+    stats_eff     = utils.bin_and_average(df_concat_eff, N_bins)
+    stats_fount   = utils.bin_and_average(df_concat_fount, N_bins)
+    
 
     # Numero di step per il campionamento
     num_step_campionamento = 3
 
     # Cartella in cui salvare i plot di default
     save_dir="plot_correlations"
+
+    input('...')
 
     #region -- Plot di correlazione fra una response_fn e tutti i parametri di input
 
@@ -89,7 +95,7 @@ if __name__ == '__main__':
         response_col='response_fn_1',
         y_label='Gas volume fraction',
         n_step=num_step_campionamento, 
-        save_name="plot_correlazione_Gas_volume_fraction",
+        save_name="corr_Gas_volume_fraction",
         save_dir=save_dir,
         fig_num=1,
         stats=stats
@@ -102,7 +108,7 @@ if __name__ == '__main__':
         response_col='response_fn_15',
         y_label='Fragmentation depth (m)',
         n_step=num_step_campionamento,  
-        save_name="plot_correlazione_Fragmentation_depth",
+        save_name="corr_Fragmentation_depth",
         save_dir=save_dir,
         fig_num=2,
         stats=stats
@@ -115,7 +121,7 @@ if __name__ == '__main__':
         response_col='response_fn_12',
         y_label='Mass flow rate (kg/s)',
         n_step=num_step_campionamento,  
-        save_name="plot_correlazione_Mass_flow_rate",
+        save_name="corr_Mass_flow_rate",
         save_dir=save_dir,
         fig_num=3,
         stats=stats
@@ -128,7 +134,7 @@ if __name__ == '__main__':
         response_col='response_fn_4',
         y_label='Exit velocity (m/s)',
         n_step=num_step_campionamento,  
-        save_name="plot_correlazione_Exit_velocity",
+        save_name="corr_Exit_velocity",
         save_dir=save_dir,
         fig_num=4,
         stats=stats
@@ -141,7 +147,7 @@ if __name__ == '__main__':
         response_col='response_fn_16',
         #y_label='Exit crystal content (vol.%)',
         n_step=num_step_campionamento,  
-        save_name="plot_correlazione_Exit_crystal_content",
+        save_name="corr_Exit_crystal_content",
         save_dir=save_dir,
         fig_num=5,
         stats=stats
@@ -176,7 +182,7 @@ if __name__ == '__main__':
         input_Max=input_Max,
         n_step=3,
         fig_num=7,
-        save_name="plot_correlazioni_con_x4",
+        save_name="corr_con_x4",
         save_dir=save_dir,
         stats=stats
     )
@@ -209,7 +215,7 @@ if __name__ == '__main__':
         input_Max=input_Max,
         n_step=1,
         fig_num=8,
-        save_name="plot_correlazioni_con_x5",
+        save_name="corr_con_x5",
         save_dir=save_dir,
         stats=stats
     )
