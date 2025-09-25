@@ -214,6 +214,23 @@ if __name__ == '__main__':
         stats=stats
     )
     #endregion
+
+    #region -- Plot correlazioni Expl/Eff/Fount con response_fn_28 
+    utils.plot_xi_vs_response_fn(
+        dfs = {
+            "Explosive"   : df_concat_expl,
+            "Effusive"    : df_concat_eff,
+            "Fountaining" : df_concat_fount
+        },
+        input_Min=input_Min,
+        input_Max=input_Max,
+        response_col='response_fn_28',
+        n_step=1,
+        save_name="corrExpEffFount_xi_vs_resp_fn_28_Undercooling@Fragm",
+        save_dir=save_dir,
+        stats=stats
+    )
+    #endregion
     
     #region -- Plot correlazioni Expl/Eff/Fount con x4 
     list_for_x_axis = [
@@ -310,13 +327,12 @@ if __name__ == '__main__':
     ]
 
     utils.plot_lists(
-        df=df_transformed,
+        df=df_concat,
         x_axis=list_for_x_axis,
         y_axis=list_for_y_axis,
         input_Min=adj_input_Min,
         input_Max=adj_input_Max,
         n_step=1,
-        fig_num=30,
         save_name="plot_correlazioni_varie",
         stats=stats
     )
