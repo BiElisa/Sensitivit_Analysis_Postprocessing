@@ -7,8 +7,6 @@ This repository provides tools to:
 - Plot Sobol indices for variance-based sensitivity analysis.  
 - (Planned) Extend functionality to frequency plots and other postprocessing tasks.  
 
----
-
 ## 📑 Table of Contents  
 
 1. [Repository Structure](#-repository-structure)  
@@ -19,8 +17,6 @@ This repository provides tools to:
 6. [Future Extensions](#-future-extensions)  
 7. [Notes](#-notes)  
 
----
-
 ## 📂 Repository Structure  
 
 - **`extract_allData.py`** → Extracts all data from DAKOTA/MAMMA simulations into structured CSV files.  
@@ -28,8 +24,6 @@ This repository provides tools to:
 - **`plot_sobol.py`** → Plots Sobol sensitivity indices.  
 - **`my_lib_extract_data.py`** → Library of functions to support `estract_allData.py'.
 - **`my_lib_process_utils.py`** → Library of functions that support all the other scripts.
-
----
 
 ## ⚙️ Preparation  
 
@@ -50,8 +44,6 @@ workdir/
 
 ├── ...
 
-
----
 
 ## 📊 Data Extraction (`extract_allData.py`)  
 
@@ -164,8 +156,8 @@ User can modify the script to choose which response_fn_* to analyze.
 
 ## ✨ Notes
 
-All scripts are designed to be modified by the user to adapt to specific workflows.
+All scripts are designed to be modified by the user to adapt to specific workflows. For example:
+- Change the label names going into...
 
-Figures are saved in .svg format for high-quality vector graphics.
+Figures are saved in .svg format for high-quality vector graphics. The user can change it going to...
 
-Ensure my_lib_process_utils.py (utility functions) is available in the same directory.
