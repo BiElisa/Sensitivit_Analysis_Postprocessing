@@ -82,3 +82,51 @@ Execute the script "plot_sobol.py", for example by terminal:
 $ python plot_sobol.py 
 
 The script generates a figure which is saved in the directory "plot_Sobol". The user can modify the script in order to get the personalised plots. For example, the user can select which response_fn analyse.
+
+# Correlation Plotting Script
+
+This script loads simulation datasets (organized as multi-level CSV files) and generates correlation plots between input parameters (`x1`, `x2`, …) and response functions (`response_fn_*`).  
+Plots can be compared across different eruptive regimes (Explosive, Effusive, Fountaining).
+
+---
+
+## ⚙️ Features
+- **File management**  
+  - Checks for required input files in the working directory.  
+  - Moves them automatically into the `csv_files/` folder.  
+  - If missing, runs `extract_allData.py` to generate them.  
+- **Data handling**  
+  - Reads CSVs with two-row headers into `pandas.DataFrame` objects.  
+  - Computes binned statistics (`bin_and_average`) for response functions.  
+- **Plotting utilities** (from `my_lib_process_utils.py`):  
+  - `plot_xi_vs_response_fn`: plot each `xi` vs. one response function.  
+  - `plot_lists`: plot arbitrary pairs of variables.  
+- **Output**  
+  - Saves figures in `.svg` format under `plot_correlations/`.  
+  - Supports multiple datasets overlayed in the same figure (e.g., Explosive vs Effusive).  
+  - Each dataset has a distinct color and marker style.
+
+---
+
+## 📂 Required files
+- **Mandatory**  
+  - `dakota_test_parallel.in` (DAKOTA input file containing parameter bounds).  
+- **CSV datasets**  
+  - `data_allConcat.csv`  
+  - `data_allConcat_explosive.csv`  
+  - `data_allConcat_notExplosive.csv`  
+  - `data_allConcat_notExplosive_effusive.csv`  
+  - `data_allConcat_notExplosive_fountaining.csv`  
+
+CSV files must contain **two header rows**:
+- **level 0:** technical names (`x1`, `response_fn_12`, …)  
+- **level 1:** descriptive labels (`Pressure`, `Exit velocity`, …)
+
+---
+
+## ▶️ Usage
+Run from the terminal:
+
+```bash
+python main_plot_correlations.py
+
