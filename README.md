@@ -41,11 +41,8 @@ Additionally, you need a folder containing all the simulation results from the s
 A recommended structure is:  
 
 workdir/
-
 ├── workdir.1/
-
 ├── workdir.2/
-
 ├── ...
 
 
