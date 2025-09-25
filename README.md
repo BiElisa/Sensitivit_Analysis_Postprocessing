@@ -1,132 +1,138 @@
-# Sensitivity Analysis - Postprocessing
-Script to perform the postprocessing of the sensitivity analysis results obtained with DAKOTA and MAMMA
+# Sensitivity Analysis - Postprocessing  
 
-
-## Preparation
-
-Be sure that the folder with the current scripts contains the following files:
-
-- dakota_tabular.dat
-- dakota_test_parallel.in
-- conduit_solver.template
-
-Moreover, you need to have a folder containing all the simulations resulting from the sensitivity analysis. The best structure could be having a folder "workdir" which contains other folders "workdir.1", "workdir.2", etc.
-
-## Execute the extraction of all the data from simulations results, files p.std
-
-Execute the script "extract_allData.py", for example by terminal:
-
-$ python extract_allData.py 
-
-You can also use two input parameters "verbose" and "pause", for example:
-
-$ python extract_allData.py --verbose true --pause false
-
-The script generates, in order, the following 34 files:
-
-* simulations.csv
-* data_at_fragmentation_total.csv
-* data_at_fragmentation.csv
-* data_at_inlet_total.csv
-* data_at_inlet.csv
-* data_at_vent_total.csv
-* data_at_vent.csv
-* data_average_total.csv
-* data_average.csv
-* data_allConcat.csv
-
-* simulations_explosive.csv
-* data_at_fragmentation_explosive.csv
-* data_at_inlet_explosive.csv
-* data_at_vent_explosive.csv
-* data_average_explosive.csv
-* data_allConcat_explosive.csv
-
-* simulations_notExplosive.csv
-* data_at_fragmentation_notExplosive.csv
-* data_at_inlet_notExplosive.csv
-* data_at_vent_notExplosive.csv
-* data_average_notExplosive.csv
-* data_allConcat_notExplosive.csv
-
-* simulations_notExplosive_effusive.csv
-* data_at_fragmentation_notExplosive_effusive.csv
-* data_at_inlet_notExplosive_effusive.csv
-* data_at_vent_notExplosive_effusive.csv
-* data_average_notExplosive_effusive.csv
-* data_allConcat_notExplosive_effusive.csv
-
-* simulations_notExplosive_fountaining.csv
-* data_at_fragmentation_notExplosive_fountaining.csv
-* data_at_inlet_notExplosive_fountaining.csv
-* data_at_vent_notExplosive_fountaining.csv
-* data_average_notExplosive_fountaining.csv
-* data_allConcat_notExplosive_fountaining.csv
-
-These files are saved in the directory "csv_files". Each column has two rows as header.
-
-## Plot correlations
-
-Execute the script "plot_correlation.py", for example by terminal:
-
-$ python plot_correlation.py 
-
-The script generates several figures which are saved in the directory "plot_correlations". The figure represent the correlation between several variables and their means. The user can modify the script in order to get the personalised correlation plots.
-
-Moreover, the sobol indices are plot, and the user can select which response_fn analyse.
-
-## Plot Sobol indices
-
-Execute the script "plot_sobol.py", for example by terminal:
-
-$ python plot_sobol.py 
-
-The script generates a figure which is saved in the directory "plot_Sobol". The user can modify the script in order to get the personalised plots. For example, the user can select which response_fn analyse.
-
-# Correlation Plotting Script
-
-This script loads simulation datasets (organized as multi-level CSV files) and generates correlation plots between input parameters (`x1`, `x2`, …) and response functions (`response_fn_*`).  
-Plots can be compared across different eruptive regimes (Explosive, Effusive, Fountaining).
+Scripts to perform the postprocessing of sensitivity analysis results obtained with **DAKOTA** and **MAMMA**.  
+This repository provides tools to:  
+- Extract and organize raw simulation outputs.  
+- Generate correlation plots between input parameters and response functions.  
+- Plot Sobol indices for variance-based sensitivity analysis.  
+- (Planned) Extend functionality to frequency plots and other postprocessing tasks.  
 
 ---
 
-## ⚙️ Features
-- **File management**  
-  - Checks for required input files in the working directory.  
-  - Moves them automatically into the `csv_files/` folder.  
-  - If missing, runs `extract_allData.py` to generate them.  
-- **Data handling**  
-  - Reads CSVs with two-row headers into `pandas.DataFrame` objects.  
-  - Computes binned statistics (`bin_and_average`) for response functions.  
-- **Plotting utilities** (from `my_lib_process_utils.py`):  
-  - `plot_xi_vs_response_fn`: plot each `xi` vs. one response function.  
-  - `plot_lists`: plot arbitrary pairs of variables.  
-- **Output**  
-  - Saves figures in `.svg` format under `plot_correlations/`.  
-  - Supports multiple datasets overlayed in the same figure (e.g., Explosive vs Effusive).  
-  - Each dataset has a distinct color and marker style.
+## 📑 Table of Contents  
+
+1. [Repository Structure](#-repository-structure)  
+2. [Preparation](#-preparation)  
+3. [Data Extraction (`extract_allData.py`)](#-data-extraction-extract_alldatapy)  
+4. [Correlation Plots (`plot_correlation.py`)](#-correlation-plots-plot_correlationpy)  
+5. [Sobol Indices (`plot_sobol.py`)](#-sobol-indices-plot_sobolpy)  
+6. [Future Extensions](#-future-extensions)  
+7. [Notes](#-notes)  
 
 ---
 
-## 📂 Required files
-- **Mandatory**  
-  - `dakota_test_parallel.in` (DAKOTA input file containing parameter bounds).  
-- **CSV datasets**  
-  - `data_allConcat.csv`  
-  - `data_allConcat_explosive.csv`  
-  - `data_allConcat_notExplosive.csv`  
-  - `data_allConcat_notExplosive_effusive.csv`  
-  - `data_allConcat_notExplosive_fountaining.csv`  
+## 📂 Repository Structure  
 
-CSV files must contain **two header rows**:
-- **level 0:** technical names (`x1`, `response_fn_12`, …)  
-- **level 1:** descriptive labels (`Pressure`, `Exit velocity`, …)
+- **`extract_allData.py`** → Extracts all data from DAKOTA/MAMMA simulations into structured CSV files.  
+- **`plot_correlation.py`** → Generates correlation plots between input variables and response functions.  
+- **`plot_sobol.py`** → Plots Sobol sensitivity indices.  
 
 ---
 
-## ▶️ Usage
-Run from the terminal:
+## ⚙️ Preparation  
+
+Make sure the working directory contains the following files:  
+
+- `dakota_tabular.dat`  
+- `dakota_test_parallel.in`  
+- `conduit_solver.template`  
+
+Additionally, you need a folder containing all the simulation results from the sensitivity analysis.  
+A recommended structure is:  
+
+workdir/
+
+├── workdir.1/
+
+├── workdir.2/
+
+├── ...
+
+
+---
+
+## 📊 Data Extraction (`extract_allData.py`)  
+
+Run the extraction script to collect all simulation results into CSV files:  
 
 ```bash
-python main_plot_correlations.py
+$ python extract_allData.py
 
+```
+
+Optional arguments:
+
+--verbose true/false → Enable detailed logging.
+
+--pause true/false → Pause execution at key steps.
+
+### Output
+
+The script generates 34 CSV files organized by eruptive style (Explosive, Effusive, Fountaining, etc.) and saves them in the csv_files/ directory.
+
+Examples:
+
+data_allConcat.csv
+
+data_allConcat_explosive.csv
+
+data_allConcat_notExplosive.csv
+
+data_allConcat_notExplosive_effusive.csv
+
+data_allConcat_notExplosive_fountaining.csv
+
+… and others.
+
+Each file uses a two-row header: technical name (x* and response_fn_*) + label (Pressure [Pa], Radius [m], ...).
+
+---
+
+## 📈 Correlation Plots (plot_correlation.py)
+
+Generate correlation plots between input parameters (x1, x2, …) and response functions (response_fn_*).
+
+```bash
+$ python plot_correlation.py
+```
+
+### Output
+
+Figures saved in plot_correlations/.
+
+Plots show scatter distributions and binned means for comparison.
+
+Multiple eruptive regimes (Explosive, Effusive, Fountaining) can be compared on the same plot.
+
+The script can be easily customized to:
+
+Select specific response_fn_* to analyze.
+
+Apply transformations (e.g., log10, scaling) to axes.
+
+Change labels and plot layouts.
+
+---
+
+## 📉 Sobol Indices (plot_sobol.py)
+
+Plot Sobol sensitivity indices for selected response functions.
+
+```bash
+$ python plot_Sobol.py
+```
+
+Output
+
+Figures saved in plot_Sobol/.
+
+User can modify the script to choose which response_fn_* to analyze.
+
+
+## ✨ Notes
+
+All scripts are designed to be modified by the user to adapt to specific workflows.
+
+Figures are saved in .svg format for high-quality vector graphics.
+
+Ensure my_lib_process_utils.py (utility functions) is available in the same directory.
