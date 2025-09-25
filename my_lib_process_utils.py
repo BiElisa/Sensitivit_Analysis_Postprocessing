@@ -327,9 +327,9 @@ def import_dakota_bounds():
     input_Min = bounds_data["lower_bounds"]["values"] if "lower_bounds" in bounds_data else None
     input_Max = bounds_data["upper_bounds"]["values"] if "upper_bounds" in bounds_data else None
     
-    print("Bounds trovati:")
-    print(df)
-    print(f'\ninput_Min = {input_Min}, \ninput_Max = {input_Max}')
+    print("\nLower e upper bounds delle variabili di input:")
+    print(f"{df}\n")
+    #print(f'\ninput_Min = {input_Min}, \ninput_Max = {input_Max}\n')
     
     return df, input_Min, input_Max
 
@@ -565,7 +565,7 @@ def get_xi_labels_from_template(df, template_file):
     return df
 
 def plot_xi_vs_response_fn( 
-        df, 
+        dfs, 
         input_Min,
         input_Max,
         response_col, 
@@ -581,9 +581,9 @@ def plot_xi_vs_response_fn(
 
     Parameters
     ----------
-    df : pandas.DataFrame
-        DataFrame con MultiIndex (nome tecnico, label descrittiva)
-        con tutte le colonne {xi} e le colonne di risposta {response_fn_i}.
+    dfs : dictionary of DataFrame {"label" : df} or single dataFrame
+        DataFrame con MultiIndex sulle colonne (level 0 = nome tecnico, level 1 = label);
+        Le colonne sono i parametri di unput {xi} e valori di output {response_fn_i}.
     input_Min : list of float
         Valori minimi (già trasformati) delle xi.
     input_Max : list of float
@@ -602,14 +602,25 @@ def plot_xi_vs_response_fn(
         Output della funzione bin_and_average. Se fornito, consente di plottare le medie.
     """
 
+    # Se dfs è un singolo dataframe, convertilo in dict
+    if not isinstance(dfs, dict):
+        dfs = {"All simulations": dfs}
+
+    # Se dfs è un singolo dataframe, convertilo in dict
+    if not isinstance(dfs, dict):
+        dfs = {"All simulations": dfs}
+
+    # Usa direttamente il primo DataFrame come riferimento (anche se vuoto)
+    ref_df = next(iter(dfs.values()))
+
     # Trova tutte le xi presenti nel DataFrame
-    xi_cols = [col for col in df.columns if col[0].startswith('x')]
+    xi_cols = [col for col in ref_df.columns if col[0].startswith('x')]
     
     if not xi_cols:
         raise ValueError("Nessuna colonna xi trovata nel DataFrame.")
 
     # Verifica che la colonna di risposta esista
-    matches = [col for col in df.columns if col[0] == response_col]
+    matches = [col for col in ref_df.columns if col[0] == response_col]
     if not matches:
         raise ValueError(f"La colonna '{response_col}' non è stata trovata nel DataFrame.")
     if len(matches) > 1:
@@ -624,8 +635,8 @@ def plot_xi_vs_response_fn(
     y_axis = []
     for col in xi_cols:
         # Label della xi (dal MultiIndex se disponibile)
-        if isinstance(df.columns, pd.MultiIndex):
-            xi_label = df.columns.get_level_values(1)[df.columns.get_loc(col)]
+        if isinstance(ref_df.columns, pd.MultiIndex):
+            xi_label = ref_df.columns.get_level_values(1)[ref_df.columns.get_loc(col)]
         else:
             xi_label = col[0]
 
@@ -634,7 +645,7 @@ def plot_xi_vs_response_fn(
 
     # Richiama plot_lists
     plot_lists(
-        df=df,
+        dfs=dfs,
         x_axis=x_axis,
         y_axis=y_axis,
         input_Min=input_Min,
@@ -647,7 +658,7 @@ def plot_xi_vs_response_fn(
     )
 
 def plot_lists(
-    df,
+    dfs,
     x_axis,
     y_axis,
     input_Min,
@@ -663,7 +674,7 @@ def plot_lists(
 
     Parameters
     ----------
-    df : pd.DataFrame
+    dfs : dictionary of DataFrame {"label" : df} or single dataFrame
         DataFrame con MultiIndex sulle colonne (level 0 = nome tecnico, level 1 = label).
     x_axis, y_axis : list
         Liste di tuple: (col_name, transform_or_factor, label) 
@@ -681,7 +692,13 @@ def plot_lists(
     stats : dict, optional
         Output della funzione bin_and_average. Se fornito, consente di plottare le medie.
     """
-    
+
+    # Check if "dfs" is a single dataFrame or a dictonary of dataFrame
+    if isinstance(dfs, dict):
+        df_items = dfs.items()
+    else:
+        df_items = [("All simulations", dfs)]
+
     if len(x_axis) != len(y_axis):
         raise ValueError("Le liste x_axis e y_axis devono avere la stessa lunghezza.")
     
@@ -694,48 +711,46 @@ def plot_lists(
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(5*n_cols, 4*n_rows), num=fig_num)
     axes = axes.flatten()
 
+    # Palette e markers per dataset
+    #colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    colors = ["red", "blue", "limegreen", "orange", "purple", "brown", "gray"]
+    markers = ["o", "o", "o", "o"] # ["o", "s", "D", "^", "v", "x"]
+
     for ax, x_entry, y_entry in zip(axes, x_axis, y_axis):
         x_col, x_transform, x_label = parse_entry(x_entry)
         y_col, y_transform, y_label = parse_entry(y_entry)
 
-        # Prendi i dati
-        x_vals = df[x_col].to_numpy()[::n_step]
-        y_vals = df[y_col].to_numpy()[::n_step]
+        for i, (df_name, df) in enumerate(df_items):
+            if df.empty:
+                continue  # skip dataset vuoto
 
-        # Applica trasformazioni se definite
-        if x_transform:
-            x_vals = x_transform(x_vals)
-        if y_transform:
-            y_vals = y_transform(y_vals)
+            color = colors[i % len(colors)]
+            marker = markers[i % len(markers)]
 
-        # Etichette sugli assi
-        if not x_label:
-            x_label = df.columns.get_level_values(1)[df.columns.get_level_values(0) == x_col][0]
-        if not y_label:
-            y_label = df.columns.get_level_values(1)[df.columns.get_level_values(0) == y_col][0]
+            # Prendi i dati (può essere array vuoto)
+            x_vals = df[x_col].to_numpy()[::n_step]
+            y_vals = df[y_col].to_numpy()[::n_step]
+            if len(x_vals) == 0 or len(y_vals) == 0:
+                continue
 
-        ax.plot(x_vals, y_vals, "rs", markerfacecolor="r", markersize=2, label="Data")
-
-        # --- Settaggio limiti se x/y sono xi---
-        if x_col.startswith("x"):
-            idx = int(x_col[1:]) - 1
-            x_min, x_max = input_Min[idx], input_Max[idx]
+            # Applica trasformazioni se definite
             if x_transform:
-                x_min, x_max = x_transform(np.array([x_min, x_max]))
-            ax.set_xlim(x_min, x_max)
-
-        if y_col.startswith("x"):
-            idx = int(y_col[1:]) - 1
-            y_min, y_max = input_Min[idx], input_Max[idx]
+                x_vals = x_transform(x_vals)
             if y_transform:
-                y_min, y_max = y_transform(np.array([y_min, y_max]))
-            ax.set_ylim(y_min, y_max)
-        # --------------------------------------
+                y_vals = y_transform(y_vals)
 
+            # Etichette sugli assi
+            if not x_label:
+                x_label = df.columns.get_level_values(1)[df.columns.get_level_values(0) == x_col][0]
+            if not y_label:
+                y_label = df.columns.get_level_values(1)[df.columns.get_level_values(0) == y_col][0]
+
+            ax.plot(x_vals, y_vals, marker, color=color, markersize=2, linestyle="none", label=f"Data {df_name}")
+
+        # --- Overlay stats se presenti ---
 
         if stats:
             try:
-
                 bin_centers = stats[x_col]["bin_centers"]
 
                 nonlinear_x = x_transform in nonlinear_funcs
@@ -774,19 +789,27 @@ def plot_lists(
                     if y_transform:
                         resp_means = y_transform(resp_means)
 
-
-#                bin_centers = stats[x_col]["bin_centers"]
-#                resp_means = stats[x_col][y_col]["mean"]
-#                # eventuali trasformazioni
-#                if x_transform:
-#                    bin_centers = x_transform(bin_centers)
-#                if y_transform:
-#                    resp_means = y_transform(resp_means.to_numpy())
-
-                ax.plot(bin_centers, resp_means, "b-", lw=2, label="Binned Mean")
+                if len(bin_centers) > 0 and len(resp_means) > 0:
+                    ax.plot(bin_centers, resp_means, "k-", lw=2, label="Binned Mean")
             except KeyError:
                 pass
 
+        # --- Settaggio limiti se x/y sono xi---
+        if x_col.startswith("x"):
+            idx = int(x_col[1:]) - 1
+            x_min, x_max = input_Min[idx], input_Max[idx]
+            if x_transform:
+                x_min, x_max = x_transform(np.array([x_min, x_max]))
+            ax.set_xlim(x_min, x_max)
+
+        if y_col.startswith("x"):
+            idx = int(y_col[1:]) - 1
+            y_min, y_max = input_Min[idx], input_Max[idx]
+            if y_transform:
+                y_min, y_max = y_transform(np.array([y_min, y_max]))
+            ax.set_ylim(y_min, y_max)
+        # --------------------------------------
+        
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
         ax.grid(True)
@@ -800,7 +823,7 @@ def plot_lists(
 
     if save_name:
         os.makedirs(save_dir, exist_ok=True)
-        plt.savefig(os.path.join(save_dir, f"{save_name}.png"), dpi=300)
+        plt.savefig(os.path.join(save_dir, f"{save_name}.svg"))
         print(f"Figura salvata in {save_dir} as {save_name}")
 
     #plt.show(block=True)
@@ -864,6 +887,17 @@ def bin_and_average(df, N_bins=25):
         stats[x][response] = DataFrame con statistiche per bin
         stats[x]["bin_centers"] = array con i centri dei bin
     """
+
+    if df.empty:
+        # crea struttura vuota coerente
+        stats = {}
+        x_cols = [col for col in df.columns.get_level_values(0) if col.startswith("x")]
+        response_cols = [col for col in df.columns.get_level_values(0) if col.startswith("response_fn")]
+        for x_col in x_cols:
+            stats[x_col] = {"bin_centers": np.array([])}
+            for resp_col in response_cols:
+                stats[x_col][resp_col] = pd.DataFrame(columns=["mean","count","sum","min","max"])
+        return stats
 
     # 1. Trova colonne xi e response
     x_cols = [col for col in df.columns.get_level_values(0) if col.startswith("x")]

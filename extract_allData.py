@@ -298,7 +298,7 @@ def extract_allData (verbose = True, pause = True):
     
     print(f"Estratte le {mask_fountaining.sum()} simulazioni fontanamento e salvate nei rispettivi file '*{suffix}'.")
     
-    df_concat_fount = pd.concat([df_dakota_clean_eff, df_fragmentation_eff, df_inlet_eff, df_vent_eff, df_average_eff], axis=1)
+    df_concat_fount = pd.concat([df_dakota_clean_fount, df_fragmentation_fount, df_inlet_fount, df_vent_fount, df_average_fount], axis=1)
 
     df_concat_fount.to_csv(os.path.join(csv_dir,'data_allConcat' + suffix), index=False)
 

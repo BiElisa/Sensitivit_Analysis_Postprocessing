@@ -71,11 +71,21 @@ if __name__ == '__main__':
     #endregion
 
     N_bins = 25
+
     stats         = utils.bin_and_average(df_concat, N_bins)
+    print(f"Elaborati dati statistici di 'data_allConcat.csv' con {N_bins} bins.\n")
+
     stats_expl    = utils.bin_and_average(df_concat_expl, N_bins)
+    print(f"Elaborati dati statistici di 'data_allConcat_explosive.csv' con {N_bins} bins.\n")
+
     stats_notExpl = utils.bin_and_average(df_concat_notExpl, N_bins)
+    print(f"Elaborati dati statistici di 'data_allConcat_notExplosive.csv' con {N_bins} bins.\n")
+
     stats_eff     = utils.bin_and_average(df_concat_eff, N_bins)
+    print(f"Elaborati dati statistici di 'data_allConcat_notExplosive_effusive.csv' con {N_bins} bins.\n")
+
     stats_fount   = utils.bin_and_average(df_concat_fount, N_bins)
+    print(f"Elaborati dati statistici di 'data_allConcat_notExplosive_fountaining.csv' con {N_bins} bins.\n")
     
 
     # Numero di step per il campionamento
@@ -84,78 +94,128 @@ if __name__ == '__main__':
     # Cartella in cui salvare i plot di default
     save_dir="plot_correlations"
 
-    input('...')
+    
 
-    #region -- Plot di correlazione fra una response_fn e tutti i parametri di input
-
+    #region -- plot correlazioni Expl/Eff/Fount con response_fn_1 
     utils.plot_xi_vs_response_fn(
-        df = df_concat,
+        dfs = {
+            "Explosive"   : df_concat_expl,
+            "Effusive"    : df_concat_eff,
+            "Fountaining" : df_concat_fount
+        },
         input_Min=input_Min,
         input_Max=input_Max,
         response_col='response_fn_1',
-        y_label='Gas volume fraction',
-        n_step=num_step_campionamento, 
-        save_name="corr_Gas_volume_fraction",
+        n_step=1, 
+        save_name="corrExpEffFount_xi_vs_resp_fn_1_GasFraction",
         save_dir=save_dir,
-        fig_num=1,
         stats=stats
     )
+    #endregion 
 
+    #region -- plot correlazioni Expl con response_fn_15 
     utils.plot_xi_vs_response_fn(
-        df = df_concat,
+        dfs = {"Explosive": df_concat_expl},
         input_Min=input_Min,
         input_Max=input_Max,
         response_col='response_fn_15',
-        y_label='Fragmentation depth (m)',
-        n_step=num_step_campionamento,  
-        save_name="corr_Fragmentation_depth",
+        n_step=1, 
+        save_name="corrExp_xi_vs_resp_fn_15_FragmDepth",
         save_dir=save_dir,
-        fig_num=2,
         stats=stats
     )
+    #endregion ----
 
-    utils.plot_xi_vs_response_fn(
-        df = df_concat,
+    #region -- plot correlazioni Expl/Eff/Fount con response_fn_12 
+    list_for_x_axis = [
+        ("x1",lambda v: v/1e6, "Inlet pressure [MPa]"), #1
+        ("x2",lambda v: v-273, "Inlet temperature [°C]"), #2
+        ("x3",), #3
+        ("x4",lambda v: v*100, "Inlet H₂O content [wt.%]"), #4
+        ("x5",lambda v: v*100, "Inlet CO₂ content [wt.%]"), #5
+        ("x6",lambda v: v*100, "Inlet phenocryst. content [vol.%]"), #6
+    ]
+
+    list_for_y_axis = [
+        ("response_fn_12", np.log10, "log10(MER) [kg/s]"), #1
+        ("response_fn_12", np.log10, "log10(MER) [kg/s]"), #2
+        ("response_fn_12", np.log10, "log10(MER) [kg/s]"), #3
+        ("response_fn_12", np.log10, "log10(MER) [kg/s]"), #4
+        ("response_fn_12", np.log10, "log10(MER) [kg/s]"), #5
+        ("response_fn_12", np.log10, "log10(MER) [kg/s]"), #6
+    ]
+
+    utils.plot_lists(
+        dfs={
+            "Explosive"   : df_concat_expl,
+            "Effusive"    : df_concat_eff,
+            "Fountaining" : df_concat_fount
+        },
+        x_axis=list_for_x_axis,
+        y_axis=list_for_y_axis,
         input_Min=input_Min,
         input_Max=input_Max,
-        response_col='response_fn_12',
-        y_label='Mass flow rate (kg/s)',
-        n_step=num_step_campionamento,  
-        save_name="corr_Mass_flow_rate",
+        n_step=1,
+        save_name="corrExpEffFount_xi_vs_resp_fn_12_log10MER",
         save_dir=save_dir,
-        fig_num=3,
         stats=stats
     )
+    #endregion ----
 
-    utils.plot_xi_vs_response_fn(
-        df = df_concat,
+    #region -- plot correlazioni Expl/Eff/Fount con response_fn_4 
+    list_for_x_axis = [
+        ("x1",lambda v: v/1e6, "Inlet pressure [MPa]"), #1
+        ("x2",lambda v: v-273, "Inlet temperature [°C]"), #2
+        ("x3",), #3
+        ("x4",lambda v: v*100, "Inlet H₂O content [wt.%]"), #4
+        ("x5",lambda v: v*100, "Inlet CO₂ content [wt.%]"), #5
+        ("x6",lambda v: v*100, "Inlet phenocryst. content [vol.%]"), #6
+    ]
+
+    list_for_y_axis = [
+        ("response_fn_4", np.log10), #1
+        ("response_fn_4", np.log10), #2
+        ("response_fn_4", np.log10), #3
+        ("response_fn_4", np.log10), #4
+        ("response_fn_4", np.log10), #5
+        ("response_fn_4", np.log10), #6
+    ]
+
+    utils.plot_lists(
+        dfs={
+            "Explosive"   : df_concat_expl,
+            "Effusive"    : df_concat_eff,
+            "Fountaining" : df_concat_fount
+        },
+        x_axis=list_for_x_axis,
+        y_axis=list_for_y_axis,
         input_Min=input_Min,
         input_Max=input_Max,
-        response_col='response_fn_4',
-        y_label='Exit velocity (m/s)',
-        n_step=num_step_campionamento,  
-        save_name="corr_Exit_velocity",
+        n_step=1,
+        save_name="corrExpEffFount_xi_vs_resp_fn_4_log10ExitVelocity",
         save_dir=save_dir,
-        fig_num=4,
         stats=stats
     )
-    
+    #endregion ----
+
+    #region -- Plot correlazioni Expl/Eff/Fount con response_fn_16 
     utils.plot_xi_vs_response_fn(
-        df = df_concat,
+        dfs = {
+            "Explosive"   : df_concat_expl,
+            "Effusive"    : df_concat_eff,
+            "Fountaining" : df_concat_fount
+        },
         input_Min=input_Min,
         input_Max=input_Max,
         response_col='response_fn_16',
-        #y_label='Exit crystal content (vol.%)',
-        n_step=num_step_campionamento,  
-        save_name="corr_Exit_crystal_content",
+        n_step=1,
+        save_name="corrExpEffFount_xi_vs_resp_fn_16_ExitCrystalContent",
         save_dir=save_dir,
-        fig_num=5,
         stats=stats
     )
-
     #endregion
     
-    #region -- plot_correlazioni_con_x4 --
+    #region -- Plot correlazioni Expl/Eff/Fount con x4 
     list_for_x_axis = [
         ("x4",lambda v: v*100, "Inlet H₂O content [wt.%]"), #1
         ("x4",lambda v: v*100, "Inlet H₂O content [wt.%]"), #2
@@ -175,20 +235,24 @@ if __name__ == '__main__':
     ]
 
     utils.plot_lists(
-        df=df_concat,
+        #dfs=df_concat,
+        dfs = {
+            "Explosive"   : df_concat_expl,
+            "Effusive"    : df_concat_eff,
+            "Fountaining" : df_concat_fount
+        },
         x_axis=list_for_x_axis,
         y_axis=list_for_y_axis,
         input_Min=input_Min,
         input_Max=input_Max,
-        n_step=3,
-        fig_num=7,
-        save_name="corr_con_x4",
+        n_step=1,
+        save_name="corrExpEffFount_x4",
         save_dir=save_dir,
         stats=stats
     )
     #endregion ----
 
-    #region -- plot_correlazioni_con_x5 --
+    #region -- Plot correlazioni Expl/Eff/Fount con x5 
     list_for_x_axis = [
         ("x5",lambda v: v*100, "Inlet CO₂ content [wt.%]"), #1
         ("x5",lambda v: v*100, "Inlet CO₂ content [wt.%]"), #2
@@ -208,18 +272,23 @@ if __name__ == '__main__':
     ]
 
     utils.plot_lists(
-        df=df_concat,
+        #dfs=df_concat,
+        dfs = {
+            "Explosive"   : df_concat_expl,
+            "Effusive"    : df_concat_eff,
+            "Fountaining" : df_concat_fount
+        },
         x_axis=list_for_x_axis,
         y_axis=list_for_y_axis,
         input_Min=input_Min,
         input_Max=input_Max,
         n_step=1,
-        fig_num=8,
-        save_name="corr_con_x5",
+        save_name="corrExpEffFount_x5",
         save_dir=save_dir,
         stats=stats
     )
     #endregion ----
+
     """
     #region -- ESEMPIO DI PLOT VARI CON TRASFORMAZIONI E LABELS --
     list_for_x_axis = [
