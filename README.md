@@ -23,6 +23,7 @@ This repository provides tools to:
     * [Customization](#customization-1)
 5. [Sobol Indices (`plot_sobol.py`)](#5-sobol-indices-plot_sobolpy)  
     * [Output](#output-2)
+    * [Customization](#customization-2)
 6. [Notes](#notes)  
 
 ##  1. Repository Structure
