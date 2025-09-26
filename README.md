@@ -192,7 +192,6 @@ The script can be easily customized to:
   If `save_name` is not provided, the function generates a name like `corr_Explosive_notExplosive_xi_response_fn_1`.
 
 
----
 * The function `utils.plot_list()` is designed to plot the correlation between arbitrary pairs of variables, defined by two lists. It is very flexible: the user can specify transformations, labels, and multiple datasets to overlay in the same figure.
   * `dfs` → dictionary of datasets to compare.
     Example:
