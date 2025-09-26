@@ -570,9 +570,9 @@ def plot_xi_vs_response_fn(
         input_Max,
         response_col, 
         y_label=None, 
-        n_step=1,
+        n_step=3,
         save_name=None,
-        save_dir="plot_files",
+        save_dir="plot_correlations",
         fig_num=None,
         stats={},
     ):
@@ -604,11 +604,16 @@ def plot_xi_vs_response_fn(
 
     # Se dfs è un singolo dataframe, convertilo in dict
     if not isinstance(dfs, dict):
-        dfs = {"All simulations": dfs}
+        dfs = {"Simulations": dfs}
 
     # Se dfs è un singolo dataframe, convertilo in dict
     if not isinstance(dfs, dict):
-        dfs = {"All simulations": dfs}
+        dfs = {"Simulations": dfs}
+
+    # Se save_name non è specificato, generalo automaticamente
+    if save_name is None:
+        dfs_keys_str = "_".join(dfs.keys())
+        save_name = f"corr_{dfs_keys_str}_xi_{response_col}"
 
     # Usa direttamente il primo DataFrame come riferimento (anche se vuoto)
     ref_df = next(iter(dfs.values()))
@@ -643,6 +648,8 @@ def plot_xi_vs_response_fn(
         x_axis.append((col[0], None, xi_label))
         y_axis.append((response_col, None, y_label))
 
+    ####### if save_name = None
+
     # Richiama plot_lists
     plot_lists(
         dfs=dfs,
@@ -663,10 +670,10 @@ def plot_lists(
     y_axis,
     input_Min,
     input_Max,
-    n_step=1,
+    n_step=3,
     fig_num=None,
     save_name=None,
-    save_dir="plot_files",
+    save_dir="plot_correlations",
     stats={}
 ):
     """
@@ -697,10 +704,16 @@ def plot_lists(
     if isinstance(dfs, dict):
         df_items = dfs.items()
     else:
-        df_items = [("All simulations", dfs)]
+        df_items = [("Simulations", dfs)]
 
     if len(x_axis) != len(y_axis):
         raise ValueError("Le liste x_axis e y_axis devono avere la stessa lunghezza.")
+    
+    # Se save_name non è specificato, generalo automaticamente
+    if save_name is None:
+        dfs_keys_str = "_".join(dfs.keys())
+        save_name = f"corr_{dfs_keys_str}_my_plot_lists"
+        print(f"Warning: no filename selected for 'save_name'. File saved as '{save_name}'.\n")
     
     nonlinear_funcs = [np.log10, np.log, np.sqrt, np.exp] # serve per le eventuali trasformazion per x e y
 

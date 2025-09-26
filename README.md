@@ -25,7 +25,7 @@ This repository provides tools to:
     * [Output](#output-2)
 6. [Notes](#notes)  
 
-## 1. Repository Structure
+##  1. Repository Structure
 
 - **`extract_allData.py`** → Extracts all data from DAKOTA/MAMMA simulations into structured CSV files.  
 - **`plot_correlation.py`** → Generates correlation plots between input variables and response functions.  
@@ -147,11 +147,112 @@ python plot_correlation.py
 
 The script can be easily customized to:
 
-Select specific response_fn_* to analyze.
+* Change the number of bins (`N_bins`) used to compute the statistics with the function `bin_and_average()`.
 
-Apply transformations (e.g., log10, scaling) to axes.
+* The function `utils.plot_xi_vs_response_fn()` is designed to plot the correlation between all the input parameters (without the need to specify them, because it will automatically look for columns with header `xi`) and a response function. The plot function can be customized by modifying its call.
+  * `dfs` → dictionary of datasets to compare.
+    Example:
 
-Change labels and plot layouts.
+    ```python
+    dfs = {
+      "Explosive": df_concat_expl,
+      "Effusive": df_concat_eff,
+      "Fountaining": df_concat_fount
+    }
+    ```
+    
+    You can remove some regimes, or pass a single DataFrame instead of a dictionary, like:
+    ```python
+    dfs = {df_concat}
+    ```
+  * `response_col` → response function to analyze (e.g. `response_fn_1`, `response_fn_15`).
+  * **Optional parameters:**
+    * `y_label` → Custom label for Y-axis. Default: the descriptive label from the CSV header.
+    * `n_step` → Sampling step for scatter plot (useful for large datasets). Default: 3.
+    * `save_name` → Filename (without extension) for saving plot. If not present, it is  auto-generated.
+    * `save_dir` → Folder to save plots. Default: `plot_correlations`.
+    * `stats` → Dictionary from `bin_and_average()`. If provided, mean values are plotted.
+
+  Example of usage:
+  ```python
+  utils.plot_xi_vs_response_fn(
+    dfs={
+        "Explosive": df_concat_expl,
+        "notExplosive": df_concat_notExpl
+    },
+    input_Min=input_Min,
+    input_Max=input_Max,
+    response_col='response_fn_1',
+    n_step=2,
+    save_name='my_plot',
+    save_dir='plots',
+    stats=stats
+  )
+  ```
+  If `save_name` is not provided, the function generates a name like `corr_Explosive_notExplosive_xi_response_fn_1`.
+
+
+---
+* The function `utils.plot_list()` is designed to plot the correlation between arbitrary pairs of variables, defined by two lists. It is very flexible: the user can specify transformations, labels, and multiple datasets to overlay in the same figure.
+  * `dfs` → dictionary of datasets to compare.
+    Example:
+
+    ```python
+    dfs = {
+      "Explosive": df_concat_expl,
+      "Effusive": df_concat_eff,
+      "Fountaining": df_concat_fount
+    }
+    ```
+    
+    You can remove some regimes, or pass a single DataFrame instead of a dictionary, like:
+    ```python
+    dfs = {df_concat}
+    ```
+  * `x_axis`, `y_axis` → lists of tuples defining what to plot. Each tuple can have up to 3 elements: 
+    * `col_name` → column name in the DataFrame (e.g., `'x1'` or `'response_fn_4'`)
+    * `transform_or_factor` → (optional) function (e.g., sum, multiplication, log10) applied to the data
+    * `label` → () string for axis label
+
+    Example of how to create the two lists:
+    ```python
+    list_for_x_axis = [
+      ("x1", lambda v: v/1e6, "Inlet pressure [MPa]"),
+      ("x2", lambda v: v-273, "Inlet temperature [°C]"),
+      ("x3",), 
+    ]
+    list_for_y_axis = [
+      ("response_fn_12", np.log10, "Log 10 (MER) [kg/s]"),
+      ("response_fn_4"),
+      ("response_fn_11", None, "Exit velocity [m/s]"),
+    ]
+    ```
+  * **Optional parameters:**
+    * `n_step` → Sampling step for scatter plot (useful for large datasets). Default: 3.
+    * `fig_num` → figure number, useful to create multiple figures.
+    * `save_name` → filename (without extension) for saving the figure. If not present, it is auto-generated.
+    * `save_dir` → folder where figures are saved. Default: `plot_correlations`.
+    * `stats` → dictionary resulting from `bin_and_average()`. If provided, the binned means are plotted.
+
+  Example of usage:
+  ```python
+  utils.plot_lists(
+    dfs={
+        "Explosive": df_concat_expl,
+        "Effusive": df_concat_eff,
+        "Fountaining": df_concat_fount
+    },
+    x_axis=list_for_x_axis,
+    y_axis=list_for_y_axis,
+    input_Min=input_Min,
+    input_Max=input_Max,
+    n_step=1,
+    save_name="corrExpEffFount_custom",
+    save_dir="plots",
+    stats=stats
+  )
+  ```
+  If `save_name` is not provided, the function generates a name like `corr_Explosive_Effusive_Fountaining_my_plot_lists`.
 
 
 

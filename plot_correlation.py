@@ -86,15 +86,10 @@ if __name__ == '__main__':
 
     stats_fount   = utils.bin_and_average(df_concat_fount, N_bins)
     print(f"Elaborati dati statistici di 'data_allConcat_notExplosive_fountaining.csv' con {N_bins} bins.\n")
-    
-
-    # Numero di step per il campionamento
-    num_step_campionamento = 3
 
     # Cartella in cui salvare i plot di default
     save_dir="plot_correlations"
 
-    
 
     #region -- plot correlazioni Expl/Eff/Fount con response_fn_1 
     utils.plot_xi_vs_response_fn(
