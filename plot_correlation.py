@@ -19,7 +19,7 @@ if __name__ == '__main__':
         "data_allConcat_explosive.csv",
         "data_allConcat_notExplosive.csv",
         "data_allConcat_notExplosive_effusive.csv",
-        "data_allConcat_notExplosive_fountaining.csv",
+        "data_allConcat_notExplosive_fountaining.csv"
     ]
 
     # Cartelle

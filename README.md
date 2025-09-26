@@ -218,7 +218,7 @@ The script can be easily customized to:
     list_for_x_axis = [
       ("x1", lambda v: v/1e6, "Inlet pressure [MPa]"),
       ("x2", lambda v: v-273, "Inlet temperature [°C]"),
-      ("x3",), 
+      ("x3"), 
     ]
     list_for_y_axis = [
       ("response_fn_12", np.log10, "Log 10 (MER) [kg/s]"),
@@ -265,10 +265,42 @@ python plot_Sobol.py
 
 ### Output
 
-Figures saved in `plot_Sobol/`.
+Figures are saved in `plot_Sobol/` as 'csv' files.
 
-User can modify the script to choose which response_fn_* to analyze.
+### Customization
 
+The script can be easily customized to plot different Sobol indices and from different dataframes by modifying the call to `plot_sobol_indices()`.
+* `sobol_indices` → dictionary of sobol indices computed by the function `compute_sobol_indices()`.
+* **Optional parameters**
+  * `xi_labels` → list of strings for the input parameters. 
+    Default: `['x1','x2','x3','x4','x5','x6']`
+  * `response_labels` → dictionary mapping response function names to descriptive labels.
+    Example: `{'response_fn_1': 'Gas volume fraction'}`
+  * `save_name` → filename (without extension) used to save the figure as PNG. If not present, it is auto-generated.
+  * `save_dir` → folder where the figure is saved. Default: `plot_Sobol`.
+
+Example of usage (with at least 6 input variables):
+```python
+response_labels = {
+    'response_fn_1': 'Gas volume fraction',
+    'response_fn_15': 'Fragmentation depth',
+    'response_fn_12': 'Mass flow rate',
+    'response_fn_4': 'Exit velocity',
+    'response_fn_16': 'Exit crystal content',
+    'response_fn_28': 'Undercooling @Frag'
+}
+
+plot_sobol_indices(
+    sobol_indices, 
+    xi_labels=['Press.', 'Temp.', 'Radius', 'H₂O', 'CO₂', 'Crystals'],
+    response_labels=response_labels,
+    save_name='sobol_indices',
+    save_dir='my_plot_Sobol'
+)
+```
+This call produces a row of stacked bar plots, one for each response function in `response_labels`. Each bar shows the normalized contribution of the input parameters to the variance of the response.
+
+If `save_name` is not provided, the plot is saved as `sobol_indices_my_plot`.
 
 ## Notes 
 

@@ -7,7 +7,12 @@ import shutil
 import subprocess
 import my_lib_process_utils as utils
 
-def plot_sobol_indices(sobol_indices, xi_labels=None, response_labels=None, save_name=None, save_dir=None):
+def plot_sobol_indices(
+        sobol_indices, 
+        xi_labels=None, 
+        response_labels=None, 
+        save_name=None, 
+        save_dir="plot_Sobol"):
     """
     Plotta gli Sobol indices normalizzati per più response_fn come stacked bar plot.
 
@@ -21,12 +26,16 @@ def plot_sobol_indices(sobol_indices, xi_labels=None, response_labels=None, save
     response_labels : dict, optional
         Etichette leggibili per ciascun response_fn
     save_name : str, optional
-        Nome con cui salvare la figura (PNG)
+        Nome con cui salvare la figura (SVG)
     save_dir : str, optional
-        Cartella dove salvare la figura (PNG)
+        Cartella dove salvare la figura (SVG)
     """
     if xi_labels is None:
         xi_labels = ['x1','x2','x3','x4','x5','x6']
+
+    if save_name is None:
+        save_name = "sobol_indices_my_plot"
+        print(f"Warning: no filename selected for 'save_name'. File saved as '{save_name}'.\n")
 
     # responses_to_plot = list(sobol_indices.keys()) # questo fa plottare gli indici di tutte le respo_fn
     # filtriamo le response_fn da plottare
@@ -62,7 +71,7 @@ def plot_sobol_indices(sobol_indices, xi_labels=None, response_labels=None, save
 
     if save_name:
         os.makedirs(save_dir, exist_ok=True)
-        plt.savefig(os.path.join(save_dir, f"{save_name}.png"), dpi=300)
+        plt.savefig(os.path.join(save_dir, f"{save_name}.svg"))
         print(f"Figura salvata in {save_dir} as {save_name}")
 
     #plt.show()
@@ -133,16 +142,11 @@ if __name__ == '__main__':
     # File richiesti
     mandatory_file = "dakota_test_parallel.in"
     other_files = [
-        "simulations.csv", 
-        "data_at_fragmentation_total.csv",
-        "data_at_fragmentation.csv",
-        "data_at_inlet_total.csv",
-        "data_at_inlet.csv",
-        "data_at_vent_total.csv",
-        "data_at_vent.csv",
-        "data_average_total.csv",
-        "data_average.csv",
-        "data_allConcat.csv"
+        "data_allConcat.csv",
+        "data_allConcat_explosive.csv",
+        "data_allConcat_notExplosive.csv",
+        "data_allConcat_notExplosive_effusive.csv",
+        "data_allConcat_notExplosive_fountaining.csv"
     ]
 
     # Cartelle
@@ -185,12 +189,40 @@ if __name__ == '__main__':
     csv_dir = "csv_files"  
 
     df_concat = pd.read_csv(os.path.join(csv_dir,"data_allConcat.csv"), **read_csv_kwargs)
+    df_concat_expl    = pd.read_csv(os.path.join(csv_dir,"data_allConcat_explosive.csv"), **read_csv_kwargs)
+    df_concat_notExpl = pd.read_csv(os.path.join(csv_dir,"data_allConcat_notExplosive.csv"), **read_csv_kwargs)
+    df_concat_eff     = pd.read_csv(os.path.join(csv_dir,"data_allConcat_notExplosive_effusive.csv"), **read_csv_kwargs)
+    df_concat_fount   = pd.read_csv(os.path.join(csv_dir,"data_allConcat_notExplosive_fountaining.csv"), **read_csv_kwargs)
+
+    df_boundsInfo, input_Min, input_Max = utils.import_dakota_bounds()
 
     #endregion
 
-    stats = utils.bin_and_average(df_concat, N_bins=25)
+    #region -- Calcolo dei dati statistici e degli indici di Sobol
 
+    N_bins = 25
+
+    stats         = utils.bin_and_average(df_concat, N_bins)
     sobol_indices = compute_sobol_indices(df_concat, stats)
+    print(f"Elaborati dati statistici e indici di Sobol di 'data_allConcat.csv' con {N_bins} bins.\n")
+
+    stats_expl    = utils.bin_and_average(df_concat_expl, N_bins)
+    sobol_indices_expl = compute_sobol_indices(df_concat_expl, stats_expl)
+    print(f"Elaborati dati statistici e indici di Sobol di 'data_allConcat_explosive.csv' con {N_bins} bins.\n")
+
+    stats_notExpl = utils.bin_and_average(df_concat_notExpl, N_bins)
+    sobol_indices_notExpl = compute_sobol_indices(df_concat_notExpl, stats_notExpl)
+    print(f"Elaborati dati statistici e indici di Sobol di 'data_allConcat_notExplosive.csv' con {N_bins} bins.\n")
+
+    stats_eff     = utils.bin_and_average(df_concat_eff, N_bins)
+    sobol_indices_eff = compute_sobol_indices(df_concat_eff, stats_eff)
+    print(f"Elaborati dati statistici e indici di Sobol di 'data_allConcat_notExplosive_effusive.csv' con {N_bins} bins.\n")
+
+    stats_fount   = utils.bin_and_average(df_concat_fount, N_bins)
+    sobol_indices_fount = compute_sobol_indices(df_concat_fount, stats_fount)
+    print(f"Elaborati dati statistici e indici di Sobol di 'data_allConcat_notExplosive_fountaining.csv' con {N_bins} bins.\n")
+
+    #endregion
 
     save_dir="plot_Sobol"
 
