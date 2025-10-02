@@ -266,21 +266,22 @@ python plot_Sobol.py
 
 ### Output
 
-Figures are saved in `plot_Sobol/` as 'csv' files.
+Figures are saved in `plot_Sobol/` as 'svg' files.
 
 ### Customization
 
 The script can be easily customized to plot different Sobol indices and from different dataframes by modifying the call to `plot_sobol_indices()`.
 * `sobol_indices` → dictionary of sobol indices computed by the function `compute_sobol_indices()`.
 * **Optional parameters**
-  * `xi_labels` → list of strings for the input parameters. 
-    Default: `['x1','x2','x3','x4','x5','x6']`
+  * `xi_labels` → list of strings for the input parameters. Must have the same length as the number of xi insobol_indices. 
+    If not provided, labels are automatically generated as `['x1','x2',…,'xN']` where `N` is the number of input parameters.
   * `response_labels` → dictionary mapping response function names to descriptive labels.
     Example: `{'response_fn_1': 'Gas volume fraction'}`
-  * `save_name` → filename (without extension) used to save the figure as PNG. If not present, it is auto-generated.
+  * `save_name` → filename (without extension). 
+    If not present, the default name is `sobol_indices_my_plot`.
   * `save_dir` → folder where the figure is saved. Default: `plot_Sobol`.
 
-Example of usage (with at least 6 input variables):
+Example of usage:
 ```python
 response_labels = {
     'response_fn_1': 'Gas volume fraction',
@@ -301,7 +302,7 @@ plot_sobol_indices(
 ```
 This call produces a row of stacked bar plots, one for each response function in `response_labels`. Each bar shows the normalized contribution of the input parameters to the variance of the response.
 
-If `save_name` is not provided, the plot is saved as `sobol_indices_my_plot`.
+If `save_name` is not provided, the plot is saved as `plot_Sobol`.
 
 ## Notes 
 
