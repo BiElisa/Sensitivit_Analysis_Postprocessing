@@ -9,7 +9,9 @@ import my_lib_process_utils as utils
 
 def plot_sobol_indices(
         sobol_indices, 
+        xi_selected=None,
         xi_labels=None, 
+        renormalize_subset=False,
         response_labels=None, 
         save_name=None, 
         save_dir="plot_Sobol"):
@@ -21,8 +23,16 @@ def plot_sobol_indices(
     sobol_indices : dict
         Chiavi = nome della response_fn
         Valori = array di Sobol indices normalizzati per ciascun xi
+    xi_selected :  list of str, optional
+        Selezione di variabili xi da plottare (ex. ['x1', 'x3']). Se None, vengono usate tutte le xi disponibili.
     xi_labels : list of str, optional
-        Nomi delle variabili xi (default: x1, x2, ...)
+        Etichette leggibili per le xi selezionate (ex. ['Pressure', 'Temperature']). 
+        Se xi_selected e` presente, devono avere la stessa lunghezza.
+    renormalize_subset : bool, optional
+        Se True e se xi_selected è usato, gli indici vengono ri-normalizzati
+        in modo che la somma delle sole variabili selezionate valga 1.
+        Se False (default), si mantengono i valori assoluti rispetto al totale
+        → il grafico può avere "buchi" (quota residua delle variabili escluse)
     response_labels : dict, optional
         Etichette leggibili per ciascun response_fn
     save_name : str, optional
@@ -30,12 +40,47 @@ def plot_sobol_indices(
     save_dir : str, optional
         Cartella dove salvare la figura (SVG)
     """
-    if xi_labels is None:
-        xi_labels = ['x1','x2','x3','x4','x5','x6']
+    
+    # --- recupera numero totale di xi ---
+    first_resp = next(iter(sobol_indices.values()))
+    n_xi_total = len(first_resp)
+    xi_all = [f"x{i+1}" for i in range(n_xi_total)]
 
+    # --- Selezione subset di xi ---
+    if xi_selected is not None:
+
+        # controlla che tutte le xi scelte esistano
+        not_found = [xi for xi in xi_selected if xi not in xi_all]
+        if not_found:
+            raise ValueError(f"Le variabili {not_found} non sono state trovate (disponibili: {xi_all}).")
+
+        # maschera in base a xi_selected
+        mask = [xi in xi_selected for xi in xi_all]
+
+        # filtra sobol_indices
+        sobol_indices = {
+            resp: np.array(vals)[mask]
+            for resp, vals in sobol_indices.items()
+        }
+
+        # gestisci etichette
+        if xi_labels is None:
+            xi_labels = xi_selected
+        else:
+            if len(xi_labels) != len(xi_selected):
+                raise ValueError(
+                    f"xi_labels deve avere la stessa lunghezza di xi_selected "
+                    f"({len(xi_selected)}), ma ha {len(xi_labels)}"
+                )
+    else:
+        # nessuna selezione → usa tutte
+        if xi_labels is None:
+            xi_labels = xi_all
+
+    # --- gestione nome file ---
     if save_name is None:
         save_name = "sobol_indices_my_plot"
-        print(f"Warning: no filename selected for 'save_name'. File saved as '{save_name}'.\n")
+        print(f" * Warning * : no filename selected for 'save_name'. File saved as '{save_name}'.\n")
 
     # responses_to_plot = list(sobol_indices.keys()) # questo fa plottare gli indici di tutte le respo_fn
     # filtriamo le response_fn da plottare
@@ -228,8 +273,7 @@ if __name__ == '__main__':
 
     # chiavi = response_fn, 
     # valori = array di indici normalizzati per ciascun xi
-    #xi_labels = ['Press.','Temp.','Radius','H2O','CO2','Crystals']
-    response_labels = {
+    response_labels_example = {
         'response_fn_1': 'Gas volume fraction',
         'response_fn_15': 'Fragmentation depth',
         'response_fn_12': 'Mass flow rate',
@@ -240,16 +284,15 @@ if __name__ == '__main__':
 
     plot_sobol_indices(
         sobol_indices, 
-        xi_labels=None, #xi_labels, 
-        response_labels=response_labels, 
+        response_labels=response_labels_example, 
         save_name='sobol_indices',
         save_dir=save_dir
     )
 
     # chiavi = response_fn, 
     # valori = array di indici normalizzati per ciascun xi
-    xi_labels = ['Press.','Temp.','Radius','H2O','CO2','Crystals']
-    response_labels = {
+    xi_labels = ['Press.','Temp.','Radius','H2O','Crystals', 'CO2']
+    response_labels_example = {
         'response_fn_1': 'Gas volume fraction',
         'response_fn_15': 'Fragmentation depth',
         'response_fn_12': 'Mass flow rate',
@@ -262,11 +305,25 @@ if __name__ == '__main__':
     plot_sobol_indices(
         sobol_indices, 
         xi_labels=xi_labels, 
-        response_labels=response_labels, 
-        save_name='sobol_indices_2',
+        response_labels=response_labels_example, 
+        save_name='sobol_indices_xi_Labels',
         save_dir=save_dir
     )
 
+    plot_sobol_indices(
+        sobol_indices, 
+        xi_selected = ['x1', 'x3'],
+        xi_labels=['a', 'b'], 
+        #renormalize_subset=True,
+        response_labels=response_labels_example, 
+        save_name='sobol_indices_xi_selected',
+        save_dir=save_dir
+    )
+
+
+
+
+    
 
 
 
