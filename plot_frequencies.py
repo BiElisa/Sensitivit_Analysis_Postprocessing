@@ -302,7 +302,7 @@ if __name__ == '__main__':
 #        save_name="freq_allSim_inputs"
 #    )
 
-#    """
+    """
 
     plot_xi_histograms(
         dfs = {"All simulations":df_concat},
@@ -425,5 +425,38 @@ if __name__ == '__main__':
         x_axis = x_axis_3,
         save_name="freq_fount_2"
     )
-    #"""
+    """
+
+
+    dfs = {
+        "All simulations": df_concat,
+        "Explosive": df_concat_expl,
+        "Effusive": df_concat_eff,
+        "Fountaining": df_concat_fount
+    }
+
+    columns = ["x1", "x2", "response_fn_1", "response_fn_12"]
+
+    result = utils.compute_hist_probabilities_multiple(dfs, columns, N_bins=50)
+
+    # Accesso ai risultati per x1
+    print(result["x1"]["bins"])
+    print(result["x1"]["frequency_Explosive"])
+    print(result["x1"]["probability_Explosive"])
+
+    # Accesso ai risultati per response_fn_12
+    print(result["response_fn_12"]["bins"])
+    print(result["response_fn_12"]["probability_Effusive"])
+
+    variables = ["x2", "x1", "response_fn_1", "response_fn_12"]
+
+    utils.plot_hist_frequencies(result, variables, dfs, ylim_max=20)
+
+
+
+
+
+
+
+
 

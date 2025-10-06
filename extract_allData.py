@@ -142,7 +142,7 @@ def extract_allData (verbose = True, pause = True):
     with open(save_path, "w", encoding="utf-8", newline='') as f:
         f.write(",".join(df_dakota_clean.columns) + "\n")
         f.write(",".join(labels_row) + "\n")
-        df_dakota_clean.to_csv(f, index=False, header=False, encoding="utf-8")
+        df_dakota_clean.to_csv(f, index=False, header=False, encoding="utf-8", float_format="%.6f")
 
     print(f"I dati delle simulazioni avvenute con successo vengono salvati in '{save_path}/{filename_simulations}.csv'.")
     print(f"{number_tot_sim - mask_invalid.sum()} simulazioni valide, {mask_invalid.sum()} eliminate perche` nulle.")
@@ -206,11 +206,11 @@ def extract_allData (verbose = True, pause = True):
 
     suffix = "_explosive.csv"
 
-    df_dakota_clean_expl.to_csv(os.path.join(csv_dir, filename_simulations + suffix), index=False, encoding="utf-8")
-    df_fragmentation_expl.to_csv(os.path.join(csv_dir, filename_at_frag + suffix), index=False, encoding="utf-8")
-    df_inlet_expl.to_csv(os.path.join(csv_dir, filename_at_inlet + suffix), index=False, encoding="utf-8")
-    df_vent_expl.to_csv(os.path.join(csv_dir, filename_at_vent + suffix), index=False, encoding="utf-8")
-    df_average_expl.to_csv(os.path.join(csv_dir, filename_average + suffix), index=False, encoding="utf-8")
+    df_dakota_clean_expl.to_csv(os.path.join(csv_dir, filename_simulations + suffix), index=False, encoding="utf-8", float_format="%.6f")
+    df_fragmentation_expl.to_csv(os.path.join(csv_dir, filename_at_frag + suffix), index=False, encoding="utf-8", float_format="%.6f")
+    df_inlet_expl.to_csv(os.path.join(csv_dir, filename_at_inlet + suffix), index=False, encoding="utf-8", float_format="%.6f")
+    df_vent_expl.to_csv(os.path.join(csv_dir, filename_at_vent + suffix), index=False, encoding="utf-8", float_format="%.6f")
+    df_average_expl.to_csv(os.path.join(csv_dir, filename_average + suffix), index=False, encoding="utf-8", float_format="%.6f")
 
     print(f"Estratte le {mask_explosive.sum()} simulazioni esplosive e salvate nei rispettivi file '*{suffix}'.  ")
     
@@ -234,11 +234,11 @@ def extract_allData (verbose = True, pause = True):
 
     suffix = "_notExplosive.csv"
 
-    df_dakota_clean_notExpl.to_csv(os.path.join(csv_dir, filename_simulations + suffix), index=False, encoding="utf-8")
-    df_fragmentation_notExpl.to_csv(os.path.join(csv_dir, filename_at_frag + suffix), index=False, encoding="utf-8")
-    df_inlet_notExpl.to_csv(os.path.join(csv_dir, filename_at_inlet + suffix), index=False, encoding="utf-8")
-    df_vent_notExpl.to_csv(os.path.join(csv_dir, filename_at_vent + suffix), index=False, encoding="utf-8")
-    df_average_notExpl.to_csv(os.path.join(csv_dir, filename_average + suffix), index=False, encoding="utf-8")
+    df_dakota_clean_notExpl.to_csv(os.path.join(csv_dir, filename_simulations + suffix), index=False, encoding="utf-8", float_format="%.6f")
+    df_fragmentation_notExpl.to_csv(os.path.join(csv_dir, filename_at_frag + suffix), index=False, encoding="utf-8", float_format="%.6f")
+    df_inlet_notExpl.to_csv(os.path.join(csv_dir, filename_at_inlet + suffix), index=False, encoding="utf-8", float_format="%.6f")
+    df_vent_notExpl.to_csv(os.path.join(csv_dir, filename_at_vent + suffix), index=False, encoding="utf-8", float_format="%.6f")
+    df_average_notExpl.to_csv(os.path.join(csv_dir, filename_average + suffix), index=False, encoding="utf-8", float_format="%.6f")
 
     print(f"Estratte le {mask_notExplosive.sum()} simulazioni esplosive e salvate nei rispettivi file '*{suffix}'.  ")
     
@@ -262,11 +262,11 @@ def extract_allData (verbose = True, pause = True):
 
     suffix = "_notExplosive_effusive.csv"
 
-    df_dakota_clean_eff.to_csv(os.path.join(csv_dir, filename_simulations + suffix), index=False, encoding="utf-8")
-    df_fragmentation_eff.to_csv(os.path.join(csv_dir, filename_at_frag + suffix), index=False, encoding="utf-8")
-    df_inlet_eff.to_csv(os.path.join(csv_dir, filename_at_inlet + suffix), index=False, encoding="utf-8")
-    df_vent_eff.to_csv(os.path.join(csv_dir, filename_at_vent + suffix), index=False, encoding="utf-8")
-    df_average_eff.to_csv(os.path.join(csv_dir, filename_average + suffix), index=False, encoding="utf-8")
+    df_dakota_clean_eff.to_csv(os.path.join(csv_dir, filename_simulations + suffix), index=False, encoding="utf-8", float_format="%.6f")
+    df_fragmentation_eff.to_csv(os.path.join(csv_dir, filename_at_frag + suffix), index=False, encoding="utf-8", float_format="%.6f")
+    df_inlet_eff.to_csv(os.path.join(csv_dir, filename_at_inlet + suffix), index=False, encoding="utf-8", float_format="%.6f")
+    df_vent_eff.to_csv(os.path.join(csv_dir, filename_at_vent + suffix), index=False, encoding="utf-8", float_format="%.6f")
+    df_average_eff.to_csv(os.path.join(csv_dir, filename_average + suffix), index=False, encoding="utf-8", float_format="%.6f")
 
     print(f"Estratte le {mask_effusive.sum()} simulazioni effusive e salvate nei rispettivi file '*{suffix}'. ")
     
@@ -290,11 +290,11 @@ def extract_allData (verbose = True, pause = True):
 
     suffix = "_notExplosive_fountaining.csv"
 
-    df_dakota_clean_fount.to_csv(os.path.join(csv_dir, filename_simulations + suffix), index=False, encoding="utf-8")
-    df_fragmentation_fount.to_csv(os.path.join(csv_dir, filename_at_frag + suffix), index=False, encoding="utf-8")
-    df_inlet_fount.to_csv(os.path.join(csv_dir, filename_at_inlet + suffix), index=False, encoding="utf-8")
-    df_vent_fount.to_csv(os.path.join(csv_dir, filename_at_vent + suffix), index=False, encoding="utf-8")
-    df_average_fount.to_csv(os.path.join(csv_dir, filename_average + suffix), index=False, encoding="utf-8")
+    df_dakota_clean_fount.to_csv(os.path.join(csv_dir, filename_simulations + suffix), index=False, encoding="utf-8", float_format="%.6f")
+    df_fragmentation_fount.to_csv(os.path.join(csv_dir, filename_at_frag + suffix), index=False, encoding="utf-8", float_format="%.6f")
+    df_inlet_fount.to_csv(os.path.join(csv_dir, filename_at_inlet + suffix), index=False, encoding="utf-8", float_format="%.6f")
+    df_vent_fount.to_csv(os.path.join(csv_dir, filename_at_vent + suffix), index=False, encoding="utf-8", float_format="%.6f")
+    df_average_fount.to_csv(os.path.join(csv_dir, filename_average + suffix), index=False, encoding="utf-8", float_format="%.6f")
     
     print(f"Estratte le {mask_fountaining.sum()} simulazioni fontanamento e salvate nei rispettivi file '*{suffix}'.")
     

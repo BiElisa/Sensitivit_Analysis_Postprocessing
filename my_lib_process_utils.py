@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import warnings
 
 def read_bak(pathname, filename):
     """
@@ -578,6 +579,7 @@ def plot_xi_vs_response_fn(
     ):
     """
     Plotta le variabili xi vs una colonna di risposta in un layout dinamico.
+    Wrapper che poi richiama plot_correlation_list
 
     Parameters
     ----------
@@ -606,15 +608,6 @@ def plot_xi_vs_response_fn(
     if not isinstance(dfs, dict):
         dfs = {"Simulations": dfs}
 
-    # Se dfs è un singolo dataframe, convertilo in dict
-    if not isinstance(dfs, dict):
-        dfs = {"Simulations": dfs}
-
-    # Se save_name non è specificato, generalo automaticamente
-    if save_name is None:
-        dfs_keys_str = "_".join(dfs.keys())
-        save_name = f"corr_{dfs_keys_str}_xi_{response_col}"
-
     # Usa direttamente il primo DataFrame come riferimento (anche se vuoto)
     ref_df = next(iter(dfs.values()))
 
@@ -635,7 +628,7 @@ def plot_xi_vs_response_fn(
     # Etichetta Y: o quella passata, o quella dal MultiIndex
     y_label = y_label or response_tuple[1]
 
-    # Costruisci le liste per plot_lists
+    # Costruisci le liste per plot_correlation_lists
     x_axis = []
     y_axis = []
     for col in xi_cols:
@@ -648,10 +641,13 @@ def plot_xi_vs_response_fn(
         x_axis.append((col[0], None, xi_label))
         y_axis.append((response_col, None, y_label))
 
-    ####### if save_name = None
+    # Se save_name non è specificato, generalo automaticamente
+    if save_name is None:
+        dfs_keys_str = "_".join(dfs.keys())
+        save_name = f"corr_{dfs_keys_str}_xi_{response_col}"
 
-    # Richiama plot_lists
-    plot_lists(
+    # Richiama plot_correlation_lists
+    plot_correlation_lists(
         dfs=dfs,
         x_axis=x_axis,
         y_axis=y_axis,
@@ -664,7 +660,7 @@ def plot_xi_vs_response_fn(
         stats=stats,
     )
 
-def plot_lists(
+def plot_correlation_lists(
     dfs,
     x_axis,
     y_axis,
@@ -712,7 +708,7 @@ def plot_lists(
     # Se save_name non è specificato, generalo automaticamente
     if save_name is None:
         dfs_keys_str = "_".join(dfs.keys())
-        save_name = f"corr_{dfs_keys_str}_my_plot_lists"
+        save_name = f"corr_{dfs_keys_str}_my_plot_correlation_lists"
         print(f"Warning: no filename selected for 'save_name'. File saved as '{save_name}'.\n")
     
     nonlinear_funcs = [np.log10, np.log, np.sqrt, np.exp] # serve per le eventuali trasformazion per x e y
@@ -956,3 +952,132 @@ def bin_and_average(df, N_bins=25):
 
     return stats
 
+def compute_binned_probabilities(
+        dfs,
+        variables,
+        N_bins=20,
+        log_vars=None
+    ):
+    """
+    Calcola le probabilità binned per più categorie di simulazioni (explosive, effusive, ecc.).
+
+    Parameters
+    ----------
+    dfs : dict[str, DataFrame]
+        Dizionario di DataFrame {"Explosive": df_expl, "Effusive": df_eff, ...}
+    variables : list[str]
+        Variabili (es. ['response_fn_1', 'response_fn_15', ...])
+    N_bins : int
+        Numero di bin per ciascuna variabile.
+    log_vars : list[str] | None
+        Variabili da trasformare in log10 prima del binning.
+
+    Returns
+    -------
+    dict
+        Struttura: results[variable][category] = {
+            "bin_edges": ...,
+            "bin_centers": ...,
+            "counts": ...,
+            "probabilities": ...
+        }
+    """
+
+    if log_vars is None:
+        log_vars = []
+
+    results = {}
+
+    for var in variables:
+        var_results = {}
+
+        for cat_name, df in dfs.items():
+            # trova la colonna corretta nel MultiIndex
+            if isinstance(df.columns, pd.MultiIndex):
+                col = [c for c in df.columns if c[0] == var]
+                if not col:
+                    continue
+                col = col[0]
+            else:
+                col = var
+
+            data = df[col].dropna().to_numpy()
+
+            # Trasformazione log se necessario
+            if var in log_vars:
+                data = np.log10(np.clip(data, 1e-12, None))
+
+            counts, bin_edges = np.histogram(data, bins=N_bins)
+            probabilities = counts / np.sum(counts) if np.sum(counts) > 0 else counts
+            bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
+
+            var_results[cat_name] = {
+                "bin_edges": bin_edges,
+                "bin_centers": bin_centers,
+                "counts": counts,
+                "probabilities": probabilities
+            }
+
+        results[var] = var_results
+
+    return results
+
+
+def plot_hist_frequencies(result, variables, dfs, ylim_max=None):
+    """
+    Plotta le frequenze calcolate per più variabili, con subplot e marker colorati.
+    
+    Parameters:
+        result (dict): output di compute_hist_probabilities_multiple
+        variables (list of str): lista delle colonne da plottare
+        dfs (dict): dizionario dei dataframe (per etichette e unità)
+        ylim_max (float, optional): limite massimo asse y
+    """
+    n_vars = len(variables)
+    fig, axes = plt.subplots(1, n_vars, figsize=(4*n_vars, 6))  # subplot orizzontale
+    if n_vars == 1:
+        axes = [axes]  # assicurarsi che sia iterabile
+    
+    # Colori e marker come in MATLAB
+    marker_info = {
+        "Effusive": {'marker':'s','color':'b'},
+        "Fountaining": {'marker':'o','color':'g'},
+        "Explosive": {'marker':'>','color':'r'},
+        "All simulations": {'marker':'d','color':'y'}
+    }
+    
+    for ax, var in zip(axes, variables):
+        bins = result[var]['bins']
+        
+        for cat in ["Effusive", "Fountaining", "Explosive", "All simulations"]:
+            freq_key = f"frequency_{cat}" if cat != "All simulations" else "frequency_total"
+            freqs = result[var][freq_key]
+            
+            # Adattamento unità (come nel tuo esempio MATLAB)
+            x_vals = bins
+            if var == "x2":  # Temperature in K -> °C
+                x_vals = bins - 273
+            elif var == "x1":  # Pressure in Pa -> MPa
+                x_vals = bins / 1e6
+            
+            ax.plot(
+                x_vals, freqs,
+                marker=marker_info[cat]['marker'],
+                color='k',
+                markerfacecolor=marker_info[cat]['color'],
+                markersize=6,
+                linestyle='None',
+                label=cat if var == variables[0] else None  # legenda solo nel primo subplot
+            )
+        
+        ax.set_xlim(x_vals.min(), x_vals.max())
+        #if ylim_max:
+        #    ax.set_ylim(0, ylim_max)
+        ax.set_xlabel(var)
+        ax.set_ylabel("Frequency of solutions")
+        ax.grid(True)
+    
+    # Legenda unica
+    axes[0].legend(loc='upper left')
+    plt.tight_layout()
+    plt.show()

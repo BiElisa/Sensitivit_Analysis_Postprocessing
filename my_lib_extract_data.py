@@ -56,9 +56,9 @@ def remove_null_simulations(input_filename, output_filename, save_dir="csv_files
         with open(output_path, "w", encoding="utf-8") as f_out:
             f_out.write(",".join(df.columns) + "\n")  # header tecnico
             f_out.write(second_line + "\n")           # etichette leggibili
-            df_clean.to_csv(f_out, index=False, header=False)
+            df_clean.to_csv(f_out, index=False, header=False, float_format="%.6f")
     else:
-        df_clean.to_csv(output_path, index=False)
+        df_clean.to_csv(output_path, index=False, float_format="%.6f")
     print(f"Salvato '{output_path}' ({len(df_clean)} simulazioni valide, {number_null_sim} eliminate perche` nulle).\n")
 
     return df_clean, number_null_sim
@@ -390,7 +390,7 @@ def extract_data_at_frag(main_dir, bak_name, N, save_dir, name_file):
     final_df = pd.concat([labels_df, output_df], ignore_index=True)
 
     # Salvataggio in csv
-    final_df.to_csv(os.path.join(save_dir, filename_total), index=False, encoding="utf-8")
+    final_df.to_csv(os.path.join(save_dir, filename_total), index=False, encoding="utf-8", float_format="%.6f")
 
     print(f"\nEstrazione completata. \nDati salvati in {save_dir}/{filename_total}.")
 
@@ -517,7 +517,7 @@ def extract_data_at_inlet(main_dir, bak_name, N, save_dir, name_file):
     final_df = pd.concat([labels_df, output_df], ignore_index=True)
 
     # Salvataggio in csv
-    final_df.to_csv(os.path.join(save_dir, filename_total), index=False, encoding="utf-8")
+    final_df.to_csv(os.path.join(save_dir, filename_total), index=False, encoding="utf-8", float_format="%.6f")
 
     #output_df.to_csv('data_at_inlet_total.csv', index=False)
     print(f"\nEstrazione completata. \nDati salvati in {save_dir}/{filename_total}.")
@@ -707,7 +707,7 @@ def extract_data_at_vent (main_dir, bak_name, N, save_dir, name_file):
     save_path = os.path.join(save_dir, filename)
 
     # Salvataggio in csv
-    final_df.to_csv(os.path.join(save_dir, filename_total), index=False, encoding="utf-8")
+    final_df.to_csv(os.path.join(save_dir, filename_total), index=False, encoding="utf-8", float_format="%.6f")
 
     print(f"\nEstrazione completata. \nDati salvati in {save_dir}/{filename_total}.")
 
@@ -860,7 +860,7 @@ def extract_data_average (main_dir, bak_name, N, save_dir, name_file):
     final_df = pd.concat([labels_df, output_df], ignore_index=True)
 
     # Salvataggio in csv
-    final_df.to_csv(os.path.join(save_dir, filename_total), index=False, encoding="utf-8")
+    final_df.to_csv(os.path.join(save_dir, filename_total), index=False, encoding="utf-8", float_format="%.6f")
 
     print(f"\nEstrazione completata. \nDati salvati in {save_dir}/{filename_total}.")
 

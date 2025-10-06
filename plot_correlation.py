@@ -140,7 +140,7 @@ if __name__ == '__main__':
         ("response_fn_12", np.log10, "log10(MER) [kg/s]"), #6
     ]
 
-    utils.plot_lists(
+    utils.plot_correlation_lists(
         dfs={
             "Explosive"   : df_concat_expl,
             "Effusive"    : df_concat_eff,
@@ -176,7 +176,7 @@ if __name__ == '__main__':
         ("response_fn_4", np.log10), #6
     ]
 
-    utils.plot_lists(
+    utils.plot_correlation_lists(
         dfs={
             "Explosive"   : df_concat_expl,
             "Effusive"    : df_concat_eff,
@@ -246,7 +246,7 @@ if __name__ == '__main__':
         ("response_fn_20", np.log10, "Log 10 Viscosity @Frag [Pa s]"), #6
     ]
 
-    utils.plot_lists(
+    utils.plot_correlation_lists(
         #dfs=df_concat,
         dfs = {
             "Explosive"   : df_concat_expl,
@@ -283,7 +283,7 @@ if __name__ == '__main__':
         ("response_fn_20", np.log10, "Log 10 Viscosity @Frag [Pa s]"), #6
     ]
 
-    utils.plot_lists(
+    utils.plot_correlation_lists(
         #dfs=df_concat,
         dfs = {
             "Explosive"   : df_concat_expl,
@@ -321,7 +321,7 @@ if __name__ == '__main__':
         ("response_fn_20", np.log10, "log10(Y)"),
     ]
 
-    utils.plot_lists(
+    utils.plot_correlation_lists(
         df=df_concat,
         x_axis=list_for_x_axis,
         y_axis=list_for_y_axis,
