@@ -94,7 +94,17 @@ def plot_histogram_lists(
     dfs : dict[str, DataFrame] | DataFrame
         Dizionario di DataFrame {"label": df} o singolo DataFrame.
     x_axis : list of dict
-        Lista di dizionari {"col": ..., "transform": ..., "label": ..., "color": ...}.
+        Lista di dizionari con chiavi:
+        {
+            "col": str,                      # Nome della colonna da plottare
+            "transform": callable | None,    # Funzione di trasformazione
+            "label": str | None,             # Etichetta personalizzata asse x
+            "color": str | None,             # Colore barre
+            "edgecolor": str | None,         # Colore contorno barre
+            "xlim": (float, float) | None,   # Limiti asse x
+            "xticks": list[float] | None,    # Posizioni ticks
+            "xticklabels": list[str] | None  # Etichette ticks
+        }
     bins : int
         Numero di bins.
     fig_num : int
@@ -115,10 +125,14 @@ def plot_histogram_lists(
     axes = axes.flatten()
 
     for ax, spec in zip(axes, x_axis):
-        col_name   = spec["col"]
-        transform  = spec.get("transform", None)
-        label     = spec.get("label", col_name)
-        color      = spec.get("color", "b")
+        col_name     = spec.get("col")
+        transform    = spec.get("transform", None)
+        label        = spec.get("label", col_name)
+        color        = spec.get("color", "blue")
+        edgecolor    = spec.get("edgecolor", "black")
+        xlim         = spec.get("xlim")
+        xticks       = spec.get("xticks")
+        xticklabels  = spec.get("xticklabels")
 
         for df_name, df in dfs.items():
             # Trova la colonna (supporta MultiIndex)
@@ -138,15 +152,30 @@ def plot_histogram_lists(
                 data,
                 bins=bins,
                 color=color,
-                edgecolor="black",
+                edgecolor=edgecolor,
                 alpha=0.5,
                 label=df_name
             )
 
-        ax.set_xlabel(label)
-        ax.set_ylabel("Frequency")
+        ax.set_xlabel(label) #or col)
+        
+        # Mostra "Frequency" solo nella colonna più a sinistra
+        col_idx = ax.get_subplotspec().colspan.start
+        if col_idx == 0:
+            ax.set_ylabel("Frequency")
+        #else:
+        #    ax.set_ylabel("")
+
         ax.legend(fontsize=8)
         ax.grid(False)#True, color='lightgray', linestyle='--', linewidth=0.5)
+
+        #  Imposta eventuali limiti o tick custom
+        if xlim is not None:
+            ax.set_xlim(xlim)
+        if xticks is not None:
+            ax.set_xticks(xticks)
+        if xticklabels is not None:
+            ax.set_xticklabels(xticklabels)
 
     # Spegni eventuali assi vuoti
     for ax in axes[num_plots:]:
@@ -159,7 +188,9 @@ def plot_histogram_lists(
         plt.savefig(os.path.join(save_dir, f"{save_name}.svg"))
         print(f"Figura salvata in {save_dir}/{save_name}.svg")
 
-    plt.show()
+    #plt.show(block=True)
+    plt.pause(1)
+    plt.close(fig)
 
 
 
@@ -233,53 +264,166 @@ if __name__ == '__main__':
     # Cartella in cui salvare i plot di default
     save_dir="plot_frequencies"
 
-    # plot 1 --
+    # Inizializzo le liste di variabili da plottare 
+    inputs_scaled = [
+        {"col": "x1", "transform": lambda x: x/1e6, "label": "Inlet Pressure [MPa]", "color": "g"},
+        {"col": "x2", "transform": lambda x: x-273, "label": "Inlet Temperature [°C]", "color": "g"},
+        {"col": "x3", "label": "Radius [m]", "color": "g"},
+        {"col": "x4", "transform": lambda x: x*100, "label": "Inlet H₂O content [wt.%]", "color": "g"},
+        {"col": "x5", "transform": lambda x: x*100, "label": "Inlet CO₂ content [wt.%]", "color": "g"},
+        {"col": "x6", "transform": lambda x: x*100, "label": "Inlet phenocryst. content [vol.%]", "color": "g"}
+    ]
+
+    x_axis_1 = [
+        {"col":"response_fn_1", "label": "Gas volume fraction at inlet"},
+        {"col":"response_fn_12", "transform": np.log10, "label": "Log10(MFR) [kg/s]"},
+        {"col":"response_fn_4", "label": "Exit velocity [m/s]"},       
+    ]
+
+    x_axis_2 = [
+        {"col":"response_fn_16", "transform": lambda x: x*100, "label": "Exit crystal content [vol.%]"},
+        {"col":"response_fn_15", "label": "Fragmentation depth [m]", "color": "red"},
+        {"col": "response_fn_18", "label": "Fragm Crit.", "color": "g", "edgecolor": "black", "xlim": (0, 4),
+            "xticks": [1, 2, 3], 
+            "xticklabels": ["SR", "IN", "BO"]
+        },
+    ]
+
+    x_axis_3 = [
+        {"col":"response_fn_27", "transform": lambda x: x*100, "label": "Gas fraction at fragm. [vol.%]"},
+        {"col":"response_fn_28", "label": "Undercooling at fragm. [°C]"},
+        {"col":"response_fn_20", "transform": np.log10, "label": "Log10(Viscosity at fragm.) [Pa s]"}
+    ]
+
+    #region Plot ALL simulations --------------
+
 #    plot_xi_histograms(
-#        dfs=df_concat,
-#        save_name="hist_xi"
+#        dfs={"All simulations":df_concat},
+#        save_name="freq_allSim_inputs"
 #    )
 
-
-    # plot 2 --
-    inputs_scaled = [
-        {"col": "x1", "transform": lambda x: x/1e6, "label": "Inlet Pressure [MPa]", "color": "b"},
-        {"col": "x2", "transform": lambda x: x-273, "label": "Inlet Temperature [°C]", "color": "b"},
-        {"col": "x3", "label": "Radius [m]"},
-        {"col": "x4", "transform": lambda x: x*100, "label": "Inlet H₂O content [wt.%]", "color": "b"},
-        {"col": "x5", "transform": lambda x: x*100, "label": "Inlet CO₂ content [wt.%]", "color": "b"},
-        {"col": "x6", "transform": lambda x: x*100, "label": "Inlet phenocryst. content [vol.%]", "color": "b"}
-    ]
+#    """
 
     plot_xi_histograms(
-        dfs = df_concat,
+        dfs = {"All simulations":df_concat},
         var_specs = inputs_scaled,
-        save_name="hist_inputs_scaled"
+        save_name="freq_allSim_inputs_scaled"
     )
-
-    # plot 3 --
-    x_axis = [
-        {"col":"response_fn_1", "label": "Gas volume fraction"},
-        {"col":"response_fn_15", "label": "Fragmentation depth [m]"},
-        {"col":"response_fn_12", "transform": np.log10, "label": "Log10(MFR) [kg/s]"},
-        {"col":"response_fn_4", "label": "Exit velocity [m/s]"},
-        {"col":"response_fn_16", "transform": lambda x: x*100, "label": "Exit crystal content [vol.%]"},
-        {"col":"response_fn_18", "label": "Fragmentation criteria"}
-    ]
+    
+    plot_histogram_lists(
+        dfs = {"All simulations":df_concat},
+        x_axis = x_axis_1 + x_axis_2,
+        save_name="freq_allSim_1"
+    )
 
     plot_histogram_lists(
-        dfs = df_concat,
-        x_axis = x_axis,
-        save_name="hist_varie_response_fn"
+        dfs = {"All simulations":df_concat},
+        x_axis = x_axis_3,
+        save_name="freq_allSim_2"
+    )
+    #endregion
+
+    #region Plot explosive simulations --------------
+
+#    plot_xi_histograms(
+#        dfs={"Explosive": df_concat_expl},
+#        save_name="freq_expl_inputs"
+#    )
+
+    plot_xi_histograms(
+        dfs = {"Explosive": df_concat_expl},
+        var_specs = inputs_scaled,
+        save_name="freq_expl_inputs_scaled"
+    )
+    
+    plot_histogram_lists(
+        dfs = {"Explosive": df_concat_expl},
+        x_axis = x_axis_1 + x_axis_2,
+        save_name="freq_expl_1"
     )
 
-    """
-    plot_xi_histograms(
-        dfs={
-            "Explosive": df_concat_expl, 
-            "Effusive": df_concat_eff
-        },
-        var_specs=var_specs,
-        save_name="hist_selected_xi"
+    plot_histogram_lists(
+        dfs = {"Explosive": df_concat_expl},
+        x_axis = x_axis_3,
+        save_name="freq_expl_2"
     )
-    """
+    #endregion
+
+    #region Plot notExplosive simulations --------------
+
+#    plot_xi_histograms(
+#        dfs={"Not explosive": df_concat_notExpl},
+#        save_name="freq_notExpl_inputs"
+#    )
+
+    plot_xi_histograms(
+        dfs = {"Not explosive": df_concat_notExpl},
+        var_specs = inputs_scaled,
+        save_name="freq_notExpl_inputs_scaled"
+    )
+    
+    plot_histogram_lists(
+        dfs = {"Not explosive": df_concat_notExpl},
+        x_axis = x_axis_1 + [{"col":"response_fn_19", "transform": np.log10, "label": "Log10(Fountain height) (m)"}],
+        save_name="freq_notExpl_1"
+    )
+
+    plot_histogram_lists(
+        dfs = {"Not explosive": df_concat_notExpl},
+        x_axis = x_axis_3,
+        save_name="freq_notExpl_2"
+    )
+    #endregion
+
+    #region Plot notExplosive-Effusive simulations --------------
+
+#    plot_xi_histograms(
+#        dfs={"Effusive": df_concat_eff},
+#        save_name="freq_eff_inputs"
+#    )
+
+    plot_xi_histograms(
+        dfs = {"Effusive": df_concat_eff},
+        var_specs = inputs_scaled,
+        save_name="freq_eff_inputs_scaled"
+    )
+    
+    plot_histogram_lists(
+        dfs = {"Effusive": df_concat_eff},
+        x_axis = x_axis_1 + [{"col":"response_fn_19", "transform": np.log10, "label": "Log10(Fountain height) (m)"}],
+        save_name="freq_eff_1"
+    )
+
+    plot_histogram_lists(
+        dfs = {"Effusive": df_concat_eff},
+        x_axis = x_axis_3,
+        save_name="freq_eff_2"
+    )
+    #endregion
+
+    #region Plot notExplosive-Fountaining simulations --------------
+
+#    plot_xi_histograms(
+#        dfs={"Fountaining": df_concat_fount},
+#        save_name="freq_fount_inputs"
+#    )
+
+    plot_xi_histograms(
+        dfs = {"Fountaining": df_concat_fount},
+        var_specs = inputs_scaled,
+        save_name="freq_fount_inputs_scaled"
+    )
+    
+    plot_histogram_lists(
+        dfs = {"Fountaining": df_concat_fount},
+        x_axis = x_axis_1 + [{"col":"response_fn_19", "transform": np.log10, "label": "Log10(Fountain height) (m)"}],
+        save_name="freq_fount_1"
+    )
+
+    plot_histogram_lists(
+        dfs = {"Fountaining": df_concat_fount},
+        x_axis = x_axis_3,
+        save_name="freq_fount_2"
+    )
+    #"""
 
