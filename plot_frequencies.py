@@ -192,6 +192,168 @@ def plot_histogram_lists(
     plt.pause(1)
     plt.close(fig)
 
+def plot_frequencies_eruptive_styles(
+        variables_to_plot, 
+        df_concat, 
+        df_concat_expl=None, 
+        df_concat_eff=None, 
+        df_concat_fount=None,  
+        N_bins=50, 
+        save_name=None,
+        save_dir="plot_frequencies"
+    ):
+    """
+    Plotta le frequenze delle variabili per diversi stili eruttivi.
+
+    Parameters
+    ----------
+    variables_to_plot : list of dict
+        Lista di variabili da plottare con eventuali trasformazioni, label e limiti.
+    df_concat : pd.DataFrame
+        Dataset totale.
+    df_concat_expl : pd.DataFrame, optional
+        Dataset esplosivo.
+    df_concat_eff : pd.DataFrame, optional
+        Dataset effusivo.
+    df_concat_fount : pd.DataFrame, optional
+        Dataset fountaining.
+    N_bins : int, optional
+        Numero di bin per l'istogramma, di default 50.
+    save_name : str, optional
+        Percorso per salvare il grafico, di default None.
+    save_dir : str, optional
+        Cartella di output.
+    """
+    
+    # Creiamo i dizionari per statistiche e frequenze
+    stats = {}
+    freqs = {}
+    freqs_expl = {}
+    freqs_eff = {}
+    freqs_fount = {}
+
+    for var in variables_to_plot:
+        col = var["col"]
+        transform = var.get("transform", None)
+        label = var.get("label", None)
+
+        # Recuperiamo i valori
+        vals       = df_concat      [col].dropna().values
+        vals_expl  = df_concat_expl [col].dropna().values if df_concat_expl is not None  else np.array([])
+        vals_eff   = df_concat_eff  [col].dropna().values if df_concat_eff is not None   else np.array([])
+        vals_fount = df_concat_fount[col].dropna().values if df_concat_fount is not None else np.array([])
+
+        # Applica la trasformazione se presente
+        if transform is not None:
+            vals       = transform(vals)
+            if df_concat_expl is not None:  vals_expl  = transform(vals_expl)
+            if df_concat_eff is not None:   vals_eff   = transform(vals_eff)
+            if df_concat_fount is not None: vals_fount = transform(vals_fount)
+
+            if label is None:
+                warnings.warn(f"La variabile '{col}' ha una trasformazione ma nessuna label definita!")
+
+        if len(vals) == 0:
+            continue
+
+        vmin, vmax = np.min(vals), np.max(vals)
+        bin_edges = np.linspace(vmin, vmax, N_bins + 1)
+        bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+
+        freq, _       = np.histogram(vals,       bins=bin_edges)
+        freq_expl, _  = np.histogram(vals_expl,  bins=bin_edges) if len(vals_expl) > 0  else (np.zeros(N_bins, dtype=int), None)
+        freq_eff, _   = np.histogram(vals_eff,   bins=bin_edges) if len(vals_eff) > 0   else (np.zeros(N_bins, dtype=int), None)
+        freq_fount, _ = np.histogram(vals_fount, bins=bin_edges) if len(vals_fount) > 0 else (np.zeros(N_bins, dtype=int), None)
+
+        stats[col] = {"min": vmin, "max": vmax, "bin_edges": bin_edges, "bin_centers": bin_centers}
+        freqs[col] = {"frequency": freq}
+        freqs_expl[col] = {"frequency": freq_expl}
+        freqs_eff[col] = {"frequency": freq_eff}
+        freqs_fount[col] = {"frequency": freq_fount}
+
+    # Preparazione subplot
+    n_plots = len(variables_to_plot)
+    n_cols = min(4, n_plots)
+    n_rows = math.ceil(n_plots / n_cols)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(4*n_cols, 3*n_rows))
+    axes = np.array(axes).flatten() if n_plots > 1 else [axes]
+
+    for i, var in enumerate(variables_to_plot):
+        col = var["col"]
+        label = var.get("label", None)
+        ylim_max = var.get("ylim_max", None)
+        xscale = var.get("xscale", None)
+        yscale = var.get("yscale", None)
+
+        if col not in stats:
+            warnings.warn(f"Colonna '{col}' non trovata nei dizionari, salto questo plot.")
+            continue
+
+        ax = axes[i]
+        x = stats[col]["bin_centers"]
+        y_total = freqs[col]["frequency"]
+        y_eff = freqs_eff[col]["frequency"]     if col in freqs_eff else None
+        y_fount = freqs_fount[col]["frequency"] if col in freqs_fount else None
+        y_expl = freqs_expl[col]["frequency"]   if col in freqs_expl else None
+
+        # Prepara i dati da plottare e la legenda
+        plot_data = []
+        if y_eff is not None:   plot_data.append((y_eff,   'Effusive', 'ks', 'dodgerblue'))
+        if y_fount is not None: plot_data.append((y_fount, 'Fountaining', 'ko', 'lime'))
+        if y_expl is not None:  plot_data.append((y_expl,  'Explosive', 'k>', 'red'))
+        plot_data.append((y_total, 'Total', 'kd', 'gold'))
+
+        for y_vals, label_plot, marker, color in plot_data:
+            ax.plot(x, y_vals, marker, markerfacecolor=color, markersize=5, label=label_plot)
+
+        #ax.plot(x, y_eff, 'ks', markerfacecolor='dodgerblue', markersize=5, label='Effusive')
+        #ax.plot(x, y_fount, 'ko', markerfacecolor='lime', markersize=5, label='Fountaining')
+        #ax.plot(x, y_expl, 'k>', markerfacecolor='red', markersize=5, label='Explosive')
+        #ax.plot(x, y_total, 'kd', markerfacecolor='gold', markersize=5, label='Total')
+
+        if xscale is not None:
+            ax.set_xscale(xscale)
+        if yscale is not None:
+            ax.set_yscale(yscale)
+
+        ax.set_xlim(stats[col]["min"], stats[col]["max"])
+        if ylim_max is not None:
+            ax.set_ylim(0, ylim_max)
+        else:
+            ax.set_ylim(0, np.max(y_total) * 1.1)
+
+        if label is None:
+            try:
+                col_label = df_concat.columns.get_level_values(1)[
+                    df_concat.columns.get_level_values(0).tolist().index(col)
+                ]
+                xlabel = col_label
+            except Exception:
+                xlabel = col
+        else:
+            xlabel = label
+        ax.set_xlabel(xlabel)
+
+        if i % n_cols == 0:
+            ax.set_ylabel("Frequency of solutions")
+
+        ax.grid(True, linestyle='--', alpha=0.3)
+
+        # Legenda solo se ci sono curve
+        if i == 0:
+            ax.legend(loc='upper right', fontsize=8)
+
+    plt.tight_layout()
+
+    if save_name:
+        os.makedirs(save_dir, exist_ok=True)
+        plt.savefig(os.path.join(save_dir, f"{save_name}.svg"))
+        print(f"Figura salvata in {save_dir} as {save_name}")
+
+    plt.show(block=True)
+    #plt.pause(1.3)
+    #plt.close(fig)
+
 
 
 
@@ -429,13 +591,28 @@ if __name__ == '__main__':
 
     #region *******************************************************************
 
+    N_bins=50
+
     variables_to_plot = [
         {"col": "x2", "transform": lambda x: x-273, "label": "Inlet temperature [°C]", "ylim_max": 22},
         {"col": "x1", "transform": lambda x: x/1e6, "label": "Inlet pressure [MPa]", "ylim_max": 22},
         {"col": "x3", "ylim_max": 22},
         {"col": "x4", "transform": lambda x: x*100, "label": "Inlet H2O content [wt.%]", "ylim_max": 22},
         {"col": "x5", "transform": lambda x: x*100, "label": "Inlet CO2 content [wt.%]", "ylim_max": 22},
-        {"col": "x6", "transform": lambda x: x*100, "label": "Inlet phenocrystal content [vol.%]", "ylim_max": 22},
+        {"col": "x6", "transform": lambda x: x*100, "label": "Inlet phenocrystal content [vol.%]", "ylim_max": 22}
+    ]
+
+    plot_frequencies_eruptive_styles(
+        variables_to_plot,
+        df_concat, 
+        df_concat_expl=df_concat_expl, 
+        df_concat_eff=df_concat_eff, 
+        df_concat_fount=df_concat_fount, 
+        N_bins=N_bins, 
+        save_name="freq_input_parameters"
+    )
+
+    variables_to_plot = [
         {"col": "response_fn_12", "transform": np.log10, "yscale": "log", "label": "Log10(MFR) [kg/s]"},
         {"col": "response_fn_4", "transform": np.log10,  "yscale": "log", "label": "Log10(exit velocity) [m/s]"},
         {"col": "response_fn_20", "transform": np.log10,  "yscale": "log", "label": "Log10(Viscosity) [Pa s]"},
@@ -446,137 +623,14 @@ if __name__ == '__main__':
         #{"col": "response_fn_20", "transform": np.log10, "label": "Log10(Viscosity at fragm) [Pa s]", "xscale": "log"}
     ]
 
-    N_bins=50
+    plot_frequencies_eruptive_styles(
+        variables_to_plot,
+        df_concat, 
+        df_concat_expl=df_concat_expl, 
+        df_concat_eff=df_concat_eff, 
+        df_concat_fount=df_concat_fount, 
+        N_bins=N_bins, 
+        save_name="freq_output_parameters"
+    )
 
-    # Creiamo dei dizionari 
-
-    stats       = {}
-    freqs       = {}
-    freqs_expl  = {}
-    freqs_eff   = {}
-    freqs_fount = {}
-
-    for var in variables_to_plot:
-        col = var["col"]
-        transform = var.get("transform", None)
-        label = var.get("label", None)
-
-        # Recuperiamo i valori
-        vals       = df_concat      [col].dropna().values  # rimuoviamo eventuali NaN
-        vals_expl  = df_concat_expl [col].dropna().values 
-        vals_eff   = df_concat_eff  [col].dropna().values 
-        vals_fount = df_concat_fount[col].dropna().values 
-
-        # Applica la trasformazione solo se richiesta
-        if transform is not None:
-            vals       = transform(vals)
-            vals_expl  = transform(vals_expl)
-            vals_eff   = transform(vals_eff)
-            vals_fount = transform(vals_fount)
-
-            # Warning se trasformazione non lineare ma label assente
-            if label is None:
-                warnings.warn(f"La variabile '{col}' ha una trasformazione ma nessuna label definita!")
-
-        if len(vals) == 0:  # se non ci sono valori, saltare
-            continue
-        
-        vmin, vmax = np.min(vals), np.max(vals)
-        bin_edges = np.linspace(vmin, vmax, N_bins + 1)
-        bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
-        
-        freq, _       = np.histogram(vals,       bins=bin_edges)
-        freq_expl, _  = np.histogram(vals_expl,  bins=bin_edges)
-        freq_eff, _   = np.histogram(vals_eff,   bins=bin_edges)
-        freq_fount, _ = np.histogram(vals_fount, bins=bin_edges)
-        
-        stats[col] = { "min": vmin, "max": vmax, "bin_edges": bin_edges, "bin_centers": bin_centers}
-
-        freqs[col]       = {"frequency": freq }
-        freqs_expl[col]  = {"frequency": freq_expl }
-        freqs_eff[col]   = {"frequency": freq_eff }
-        freqs_fount[col] = {"frequency": freq_fount }
-
-
-    n_plots = len(variables_to_plot)
-    n_cols = min(4, n_plots)
-    n_rows = math.ceil(n_plots / n_cols)
-
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(4*n_cols, 3*n_rows))
-    axes = np.array(axes).flatten() if n_plots > 1 else [axes]  
-
-    # Definiamo marker e colori per i 4 dataset
-    markers = ['s', 'o', '>', 'd']
-    colors = ['dodgerblue', 'lime', 'red', 'gold']
-    labels_legend = ['Effusive','Fountaining','Explosive','Total']
-
-    for i, var in enumerate(variables_to_plot):
-
-        col = var["col"]
-        label = var.get("label", None)
-        ylim_max = var.get("ylim_max", None)
-        xscale = var.get("xscale", None)
-        yscale = var.get("yscale", None)
-
-        # --- Controllo presenza colonna ---
-        if col not in stats:
-            warnings.warn(f"Colonna '{col}' non trovata nei dizionari, salto questo plot.")
-            continue
-
-        ax = axes[i]
-
-        # --- Dati da plottare ---
-        x = stats[col]["bin_centers"]
-        y_total = freqs[col]["frequency"]
-        y_eff = freqs_eff[col]["frequency"]
-        y_fount = freqs_fount[col]["frequency"]
-        y_expl = freqs_expl[col]["frequency"]
-
-        # --- Tracciare le quattro curve ---
-        ax.plot(x, y_eff, 'ks', markerfacecolor='b', markersize=5, label='Effusive')
-        ax.plot(x, y_fount, 'ko', markerfacecolor='g', markersize=5, label='Fountaining')
-        ax.plot(x, y_expl, 'k>', markerfacecolor='r', markersize=5, label='Explosive')
-        ax.plot(x, y_total, 'kd', markerfacecolor='y', markersize=5, label='Total')
-
-        # --- Scaling assi ---
-        if xscale is not None:
-            ax.set_xscale(xscale)
-        if yscale is not None:
-            ax.set_yscale(yscale)
-
-        # --- Limiti ---
-        ax.set_xlim(stats[col]["min"], stats[col]["max"])
-        if ylim_max is not None:
-            ax.set_ylim(0, ylim_max)
-        else:
-            ax.set_ylim(0, np.max(y_total) * 1.1)
-
-        # --- Determino la label dell’asse x ---
-        if label is None:
-            # Prendiamo la seconda riga del MultiIndex (livello 1)
-            try:
-                col_label = df_concat.columns.get_level_values(1)[
-                    df_concat.columns.get_level_values(0).tolist().index(col)
-                ]
-                xlabel = col_label
-            except Exception:
-                xlabel = col
-        else:
-            xlabel = label
-        ax.set_xlabel(xlabel)
-
-        if i % n_cols == 0:
-            ax.set_ylabel("Frequency of solutions")
-
-        # --- Stile ---
-        ax.grid(True, linestyle='--', alpha=0.3)
-
-        # --- Legenda ---
-        if i == 0:
-            ax.legend(loc='upper right', fontsize=8)
-
-    # --- Layout generale ---
-    plt.tight_layout()
-    plt.savefig("plot_frequencies_eff_fount_expl.svg")
-    plt.show()
-
+ 
