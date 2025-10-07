@@ -426,37 +426,46 @@ if __name__ == '__main__':
         save_name="freq_fount_2"
     )
     """
+    N_bins=50
+
+    # Creiamo dei dizionari 
+
+    stats       = {}
+    freqs       = {}
+    freqs_expl  = {}
+    freqs_eff   = {}
+    freqs_fount = {}
+
+    cols_to_use = [col for col in df_concat.columns.get_level_values(0) if col.startswith('x') or col.startswith('response_fn')]
+
+    for col in cols_to_use:
+        vals       = df_concat      [col].dropna().values  # rimuoviamo eventuali NaN
+        vals_expl  = df_concat_expl [col].dropna().values 
+        vals_eff   = df_concat_eff  [col].dropna().values 
+        vals_fount = df_concat_fount[col].dropna().values 
+        
+        if len(vals) == 0:  # se non ci sono valori, saltare
+            continue
+        
+        vmin, vmax = np.min(vals), np.max(vals)
+        bin_edges = np.linspace(vmin, vmax, N_bins + 1)
+        bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+        
+        freq, _       = np.histogram(vals,       bins=bin_edges)
+        freq_expl, _  = np.histogram(vals_expl,  bins=bin_edges)
+        freq_eff, _   = np.histogram(vals_eff,   bins=bin_edges)
+        freq_fount, _ = np.histogram(vals_fount, bins=bin_edges)
+        
+        stats[col] = { "min": vmin, "max": vmax}
+
+        freqs[col]       = {"frequency": freq }
+        freqs_expl[col]  = {"frequency": freq_expl }
+        freqs_eff[col]   = {"frequency": freq_eff }
+        freqs_fount[col] = {"frequency": freq_fount }
 
 
-    dfs = {
-        "All simulations": df_concat,
-        "Explosive": df_concat_expl,
-        "Effusive": df_concat_eff,
-        "Fountaining": df_concat_fount
-    }
+    #for col_key in stats_and_freq:
+    #    print(col_key, stats_and_freq[col_key]["min"], stats_and_freq[col_key]["max"], stats_and_freq[col_key]["frequency"])
 
-    columns = ["x1", "x2", "response_fn_1", "response_fn_12"]
-
-    result = utils.compute_hist_probabilities_multiple(dfs, columns, N_bins=50)
-
-    # Accesso ai risultati per x1
-    print(result["x1"]["bins"])
-    print(result["x1"]["frequency_Explosive"])
-    print(result["x1"]["probability_Explosive"])
-
-    # Accesso ai risultati per response_fn_12
-    print(result["response_fn_12"]["bins"])
-    print(result["response_fn_12"]["probability_Effusive"])
-
-    variables = ["x2", "x1", "response_fn_1", "response_fn_12"]
-
-    utils.plot_hist_frequencies(result, variables, dfs, ylim_max=20)
-
-
-
-
-
-
-
-
+    
 
