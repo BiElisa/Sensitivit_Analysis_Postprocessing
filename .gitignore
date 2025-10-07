@@ -1,5 +1,6 @@
 csv_files/
 plot_correlations/
 plot_Sobol/
+plot_histograms/
 __pycache__/
 
