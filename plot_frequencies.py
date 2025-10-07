@@ -343,6 +343,10 @@ def plot_frequencies_eruptive_styles(
         if i == 0:
             ax.legend(loc='upper right', fontsize=8)
 
+    # Spegni eventuali assi vuoti
+    for ax in axes[n_plots:]:
+        ax.axis("off")
+
     plt.tight_layout()
 
     if save_name:
@@ -350,9 +354,9 @@ def plot_frequencies_eruptive_styles(
         plt.savefig(os.path.join(save_dir, f"{save_name}.svg"))
         print(f"Figura salvata in {save_dir} as {save_name}")
 
-    plt.show(block=True)
-    #plt.pause(1.3)
-    #plt.close(fig)
+    #plt.show(block=True)
+    plt.pause(1)
+    plt.close(fig)
 
 
 
@@ -423,9 +427,6 @@ if __name__ == '__main__':
 
     #endregion
 
-    # Cartella in cui salvare i plot di default
-    save_dir="plot_frequencies"
-
     # Inizializzo le liste di variabili da plottare 
     inputs_scaled = [
         {"col": "x1", "transform": lambda x: x/1e6, "label": "Inlet Pressure [MPa]", "color": "g"},
@@ -459,12 +460,10 @@ if __name__ == '__main__':
 
     #region Plot ALL simulations --------------
 
-#    plot_xi_histograms(
-#        dfs={"All simulations":df_concat},
-#        save_name="freq_allSim_inputs"
-#    )
-
-    """
+    plot_xi_histograms(
+        dfs={"All simulations":df_concat},
+        save_name="freq_allSim_inputs"
+    )
 
     plot_xi_histograms(
         dfs = {"All simulations":df_concat},
@@ -487,10 +486,10 @@ if __name__ == '__main__':
 
     #region Plot explosive simulations --------------
 
-#    plot_xi_histograms(
-#        dfs={"Explosive": df_concat_expl},
-#        save_name="freq_expl_inputs"
-#    )
+    plot_xi_histograms(
+        dfs={"Explosive": df_concat_expl},
+        save_name="freq_expl_inputs"
+    )
 
     plot_xi_histograms(
         dfs = {"Explosive": df_concat_expl},
@@ -513,10 +512,10 @@ if __name__ == '__main__':
 
     #region Plot notExplosive simulations --------------
 
-#    plot_xi_histograms(
-#        dfs={"Not explosive": df_concat_notExpl},
-#        save_name="freq_notExpl_inputs"
-#    )
+    plot_xi_histograms(
+        dfs={"Not explosive": df_concat_notExpl},
+        save_name="freq_notExpl_inputs"
+    )
 
     plot_xi_histograms(
         dfs = {"Not explosive": df_concat_notExpl},
@@ -539,10 +538,10 @@ if __name__ == '__main__':
 
     #region Plot notExplosive-Effusive simulations --------------
 
-#    plot_xi_histograms(
-#        dfs={"Effusive": df_concat_eff},
-#        save_name="freq_eff_inputs"
-#    )
+    plot_xi_histograms(
+        dfs={"Effusive": df_concat_eff},
+        save_name="freq_eff_inputs"
+    )
 
     plot_xi_histograms(
         dfs = {"Effusive": df_concat_eff},
@@ -565,10 +564,10 @@ if __name__ == '__main__':
 
     #region Plot notExplosive-Fountaining simulations --------------
 
-#    plot_xi_histograms(
-#        dfs={"Fountaining": df_concat_fount},
-#        save_name="freq_fount_inputs"
-#    )
+    plot_xi_histograms(
+        dfs={"Fountaining": df_concat_fount},
+        save_name="freq_fount_inputs"
+    )
 
     plot_xi_histograms(
         dfs = {"Fountaining": df_concat_fount},
@@ -587,7 +586,6 @@ if __name__ == '__main__':
         x_axis = x_axis_3,
         save_name="freq_fount_2"
     )
-    """
 
     #region *******************************************************************
 
