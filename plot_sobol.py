@@ -147,51 +147,8 @@ if __name__ == '__main__':
     """
     Genera grafici degli indici di sobol.
     """
-    
-    #region -- Controlliamo che i dati che ci servono siano presenti, altrimenti li andiamo a costruire
 
-    # File richiesti
-    mandatory_file = "dakota_test_parallel.in"
-    other_files = [
-        "data_allConcat.csv",
-        "data_allConcat_explosive.csv",
-        "data_allConcat_notExplosive.csv",
-        "data_allConcat_notExplosive_effusive.csv",
-        "data_allConcat_notExplosive_fountaining.csv"
-    ]
-
-    # Cartelle
-    cwd = os.getcwd()
-    csv_dir = os.path.join(cwd, "csv_files")
-    os.makedirs(csv_dir, exist_ok=True)
-
-    # --- Controllo mandatory ---
-    if not os.path.isfile(os.path.join(cwd, mandatory_file)):
-        print(f"Abort: The file '{mandatory_file}' is not in the folder {cwd}.")
-        sys.exit(1)
-
-    # --- Controllo altri file ---
-    missing = []
-    for f in other_files:
-        path_current = os.path.join(cwd, f)
-        path_csv = os.path.join(csv_dir, f)
-
-        if os.path.isfile(path_current):
-            # Se il file è nella cartella corrente, spostalo in csv_files
-            shutil.move(path_current, path_csv)
-            print(f"Moved '{f}' from current folder to '{csv_dir}'.")
-        elif not os.path.isfile(path_csv):
-            # Mancante ovunque
-            missing.append(f)
-
-    # --- Se mancano file, run extract_allData ---
-    if missing:
-        print(f"The following files are missing from both current folder and '{csv_dir}': {missing}")
-        print("The script 'extract_allData.py' is executed.")
-        subprocess.run(["python", "extract_allData.py", "--pause", "false"])
-    
-
-    #endregion
+    utils.check_files_required()
 
     #region -- Carichiamo tutti i file e dati che ci servono
 
