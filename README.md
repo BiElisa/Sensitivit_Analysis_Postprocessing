@@ -22,7 +22,7 @@ This repository provides tools to:
     * [Output](#output-1)
     * [Customization](#customization-1)
 5. [Sobol Indices Plots (`plot_sobol.py`)](#5-sobol-indices-plot_sobolpy)  
-    * [Plotting utility](#plotting_utilities-2)
+    * [Plotting utilities](#plotting_utilities-2)
     * [Usage](#usage-2)
     * [Output](#output-2)
     * [Customization](#customization-2)
@@ -31,6 +31,11 @@ This repository provides tools to:
     * [Usage](#usage-3)
     * [Output](#output-3)
     * [Customization](#customization-3)
+7. [Frequency Plots (`plot_frequencies.py`)](#7-frequency-plots-plot_frequenciespy) 
+    * [Plotting utilities](#plotting_utilities-4)
+    * [Usage](#usage-4)
+    * [Output](#output-4)
+    * [Customization](#customization-4)
 
 8. [Notes](#notes) 
 
@@ -278,7 +283,7 @@ Results `stats*` of `bin_and_average` are passed to the function `compute_sobol_
 
 Same files management described in [Input files management](#file-management).
 
-### Plotting utility
+### Plotting utilities
 The script presents one plot utility:
 - `plot_sobol_indices`: plot the sobol indices `sobol_indices*` of all variables or of a selection of variables.
 
@@ -367,7 +372,7 @@ The script can be easily customized to plot histograms of different variables an
   * **Optional parameters:**
     * `var_specs`: List of dictonaries that contain a selection of variables to plot. Default: `None`, therefore all the `xi` variables are considered.
     A dictonary allows several keys:
-      * `col` → String for `x1`, or `x2`, etc.
+      * `col` → String to identify the variable in the dataFrame, i.e. `x1`, or `response_fn_1`, etc.
       * `transform` (optional) → Transformation, linear or not, to apply to the variable. For example:
         ```python
         "transform": lambda x: x/1e6
@@ -384,7 +389,7 @@ The script can be easily customized to plot histograms of different variables an
       * `edgecolor` (optional) → Color of the bars' edges. If not provided, black is used.
       * `xlim` (optional) → Extremes for the x-axis; usage: `(a,b)`. If not provided, the limits depend on the variable values.
       * `xticks` and `xticklabels` (optionals) → Print only specific values on the x axis; usage: `[-1,0,0.5,1]`. Possibly, associate them with different labels; example: `[A,B,C,D]`.
-    * `bins` → N umber of bins for the hinstograms. Default: 30.
+    * `bins` → Number of bins for the histograms. Default: 30.
     * `fig_num` → Figure number, used to autogenerate the name to save the plot if that is not defined by the user. Default: None.
     * `save_name` → Filename (without extension) for saving plot. If not present, it is auto-generated (using `fig_num` if present).
     * `save_dir` → Folder to save plots. Default: `plot_histograms`.
@@ -417,7 +422,7 @@ The script can be easily customized to plot histograms of different variables an
     ```
     and the default name visualized in the plots' legends is "Simulations".
   * `x_axis`: List of dictonaries that contain a selection of variables to plot. Default: `None`, therefore all the `xi` variables are considered. A dictonary allows several keys:
-    * `col` → String for `x1`, or `response_fn_1`, etc.
+    * `col` → String to identify the variable in the dataFrame, i.e. `x1`, or `response_fn_1`, etc.
     * `transform` (optional) → Transformation, linear or not, to apply to the variable. For example:
       ```python
       "transform": lambda x: x/1e6
@@ -450,11 +455,82 @@ The script can be easily customized to plot histograms of different variables an
         {"col": "response_fn_2"}
     ],
     save_name="freq_eff_x3&respFn2",
+    save_dir="my_plot_histograms",
     fig_num=5
   )
   ```
   If `save_name` is not provided, the function generates a name like `freq_Effusive_my_plot_lists_fig5`.
 
+
+
+## 7. Frequency plots (`plot_frequencies.py`)
+Frequency plots for input parameters `x*` and selcted response functions `response_fn_*`. Comparisons between different regimes are allowed.
+
+Same files management described in [Input files management](#file-management).
+
+### Plotting utilities
+The script comes with one plotting utility:
+- `plot_frequencies_eruptive_styles`: generic function that plot the frequencies of a list of variables (can be both `xi` and `response_fn_i`).
+This utility supports multiple datasets overlayed in the same figure (e.g., All styles, Explosive, Effusive, and Fountaining) or a single dataset only.
+  In case that multiple datasets are plotted, each one has a distinct color and a distinct marker style.
+### Usage
+Run from the terminal:
+
+```bash
+python plot_frequencies.py
+```
+
+### Output
+Figures are saved in the folder `plot_frequencies/` as `svg` files.
+Each figure corresponds to a specific simulation group (e.g., All simulations, Explosive, Effusive, etc.) and variable set.
+
+### Customization
+The script can be easily customized to have frequencies plots of different variables and from different dataframes by modifying the calls to `plot_frequencies_eruptive_styles`.
+
+The function `plot_histograms_list()` is designed to produce frequency plots for a list of variables, both `xi` and `response_fn_i`. The plot function can be customized by modifying its call.
+  * `variables_to_plot` → List of dictionaries with the variables to plot with possible transformations, labels and other information. A dictionary allows several keys:
+    * `col` → String to identify the variable in the dataFrame, i.e. `x1`, or `response_fn_1`, etc.
+    * `transform` (optional) → Transformation, linear or not, to apply to the variable. For example:
+      ```python
+      "transform": lambda x: x/1e6
+      "transform": lambda x: x-273
+      "transform": np.log10
+      ```
+    * `label` (optional) → String for the label to use for the x axis. If not provided, the original label from the dataFrame is used. Example of usage:
+      ```python
+      "label": "Pressure [MPa]"
+      "label": "Temperature [°C]"
+      "label": "Log10(MFR) [kg/s]"
+      ```
+    * `ylim_max` (optional) → Upper limit for the y-axis; usage: `200`. If not provided, the limit depends on the variable values.
+    * `yscale` (optional) → Useful to specify the use of a logarithmic scale over the y-axis; usage: `"log"`.
+    * `xscale` (optional) → Useful to specify the use of a logarithmic scale over the x-axis; usage: `"log"`.
+  * `df_concat` → DataFrame of all the simulations.
+  * **Optional parameters:**
+    * `df_concat_expl`, `df_concat_eff`, `df_concat_fount` → DataFrame of the different regimes. Default: None.
+    * `N_bins` → Number of bins for the plot. Default: 50.
+    * `fig_num` → Figure number, used to autogenerate the name to save the plot if that is not defined by the user. Default: None.
+    * `save_name` → Filename (without extension) for saving plot. If not present, it is auto-generated (using `fig_num` if present).
+    * `save_dir` → Folder to save plots. Default: `plot_frequencies`.
+
+  Example of usage:
+  ```python
+  variables_to_plot = [
+    {"col": "x2", "transform": lambda x: x-273, "label": "Inlet temperature [°C]"},
+    {"col": "response_fn_12", "transform": np.log10, "yscale": "log", "label": "Log10(MFR) [kg/s]"}
+  ]
+
+  plot_frequencies_eruptive_styles(
+    variables_to_plot,
+    df_concat, 
+    df_concat_eff=df_concat_eff, 
+    df_concat_fount=df_concat_fount, 
+    N_bins=30, 
+    fig_num=3,
+    save_name="freq_effVSFount_x2&resp_fn_12"
+  )
+  ```
+  If `save_name` is not provided, the function generates a name like `freq_my_plot_lists_fig3`.
 
 
 
