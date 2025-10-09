@@ -42,7 +42,7 @@ This repository provides tools to:
     * [Output](#output-4)
     * [Customization](#customization-4)
 
-8. [Notes & to-do list](#8-notes-&-to-do-list) 
+[Notes & to-do list](#notes--to-do-list) 
 
 ##  1. Repository Structure
 
