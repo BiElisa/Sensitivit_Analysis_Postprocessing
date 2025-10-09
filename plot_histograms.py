@@ -1,16 +1,13 @@
 import pandas as pd
 import numpy as np
 import os
-import sys
-import shutil
-import subprocess
 import matplotlib.pyplot as plt
 import math
 import warnings
 import my_lib_process_utils as utils
 
 def plot_xi_histograms(
-        dfs,
+        df,
         var_specs=None,
         bins=30,
         save_name=None,
@@ -22,9 +19,9 @@ def plot_xi_histograms(
     
     Parameters
     ----------
-    dfs : dict[str, DataFrame] | DataFrame
-        Dizionario di DataFrame ({"label": df}) o singolo DataFrame.
-        Ogni df con colonne MultiIndex (level 0 = nome tecnico, es. 'x1'; level 1 = label descrittiva).
+    df : dict[str, DataFrame] | DataFrame
+        Dizionario di DataFrame ({"label": df}) o direttamente DataFrame.
+        Il dataframe ha colonne MultiIndex (level 0 = nome tecnico, es. 'x1'; level 1 = label descrittiva).
     var_specs : list[dict]
         Lista di dizionari con specifiche per le variabili da plottare:
         {"col": "x1", "transform": lambda arr: arr/1e6, "label": "Pressure (MPa)", "color": "b"}
@@ -38,12 +35,12 @@ def plot_xi_histograms(
         Numero figura matplotlib.
     """
 
-    # Se dfs è un singolo dataframe, convertilo in dict
-    if not isinstance(dfs, dict):
-        dfs = {"Simulations": dfs}
+    # Se df è passato come dataframe, convertilo in dict
+    if not isinstance(df, dict):
+        df = {"Simulations": df}
 
     # Usa direttamente il primo DataFrame come riferimento (anche se vuoto)
-    ref_df = next(iter(dfs.values()))
+    ref_df = next(iter(df.values()))
 
     # Trova tutte le xi presenti nel DataFrame
     xi_cols = [col for col in ref_df.columns if col[0].startswith('x')]
@@ -70,7 +67,7 @@ def plot_xi_histograms(
             )
 
     plot_histogram_lists(
-        dfs=dfs,
+        df=df,
         x_axis=var_specs,
         bins=bins,
         fig_num=fig_num,
@@ -79,7 +76,7 @@ def plot_xi_histograms(
     )
 
 def plot_histogram_lists(
-        dfs,
+        df,
         x_axis,
         bins=30,
         fig_num=None,
@@ -91,7 +88,7 @@ def plot_histogram_lists(
 
     Parameters
     ----------
-    dfs : dict[str, DataFrame] | DataFrame
+    df : dict[str, DataFrame] | DataFrame
         Dizionario di DataFrame {"label": df} o singolo DataFrame.
     x_axis : list of dict
         Lista di dizionari con chiavi:
@@ -114,8 +111,8 @@ def plot_histogram_lists(
     save_dir : str
         Cartella di output.
     """
-    if not isinstance(dfs, dict):
-        dfs = {"Simulations": dfs}
+    if not isinstance(df, dict):
+        df = {"Simulations": df}
 
     num_plots = len(x_axis)
     n_cols = min(3, num_plots)
@@ -134,17 +131,17 @@ def plot_histogram_lists(
         xticks       = spec.get("xticks")
         xticklabels  = spec.get("xticklabels")
 
-        for df_name, df in dfs.items():
+        for df_name, DF in df.items():
             # Trova la colonna (supporta MultiIndex)
-            if isinstance(df.columns, pd.MultiIndex):
-                matches = [c for c in df.columns if c[0] == col_name]
+            if isinstance(DF.columns, pd.MultiIndex):
+                matches = [c for c in DF.columns if c[0] == col_name]
                 if not matches:
                     continue
                 col = matches[0]
             else:
                 col = col_name
 
-            data = df[col].dropna().to_numpy()
+            data = DF[col].dropna().to_numpy()
             if transform:
                 data = transform(data)
 
@@ -157,17 +154,15 @@ def plot_histogram_lists(
                 label=df_name
             )
 
-        ax.set_xlabel(label) #or col)
+        ax.set_xlabel(label) 
         
         # Mostra "Frequency" solo nella colonna più a sinistra
         col_idx = ax.get_subplotspec().colspan.start
         if col_idx == 0:
             ax.set_ylabel("Frequency")
-        #else:
-        #    ax.set_ylabel("")
 
         ax.legend(fontsize=8)
-        ax.grid(False)#True, color='lightgray', linestyle='--', linewidth=0.5)
+        ax.grid(False)
 
         #  Imposta eventuali limiti o tick custom
         if xlim is not None:
@@ -248,24 +243,26 @@ if __name__ == '__main__':
     #region -- Plot histograms for ALL simulations 
 
     plot_xi_histograms(
-        dfs={"All simulations":df_concat},
+        df={"All simulations":df_concat},
         save_name="freq_allSim_inputs"
     )
 
+    input('...')
+
     plot_xi_histograms(
-        dfs = {"All simulations":df_concat},
+        df = {"All simulations":df_concat},
         var_specs = inputs_scaled,
         save_name="freq_allSim_inputs_scaled"
     )
     
     plot_histogram_lists(
-        dfs = {"All simulations":df_concat},
+        df = {"All simulations":df_concat},
         x_axis = x_axis_1 + x_axis_2,
         save_name="freq_allSim_1"
     )
 
     plot_histogram_lists(
-        dfs = {"All simulations":df_concat},
+        df = {"All simulations":df_concat},
         x_axis = x_axis_3,
         save_name="freq_allSim_2"
     )
@@ -274,24 +271,24 @@ if __name__ == '__main__':
     #region -- Plot histograms for explosive simulations 
 
     plot_xi_histograms(
-        dfs={"Explosive": df_concat_expl},
+        df={"Explosive": df_concat_expl},
         save_name="freq_expl_inputs"
     )
 
     plot_xi_histograms(
-        dfs = {"Explosive": df_concat_expl},
+        df = {"Explosive": df_concat_expl},
         var_specs = inputs_scaled,
         save_name="freq_expl_inputs_scaled"
     )
     
     plot_histogram_lists(
-        dfs = {"Explosive": df_concat_expl},
+        df = {"Explosive": df_concat_expl},
         x_axis = x_axis_1 + x_axis_2,
         save_name="freq_expl_1"
     )
 
     plot_histogram_lists(
-        dfs = {"Explosive": df_concat_expl},
+        df = {"Explosive": df_concat_expl},
         x_axis = x_axis_3,
         save_name="freq_expl_2"
     )
@@ -300,24 +297,24 @@ if __name__ == '__main__':
     #region -- Plot histograms for notExplosive simulations 
 
     plot_xi_histograms(
-        dfs={"Not explosive": df_concat_notExpl},
+        df={"Not explosive": df_concat_notExpl},
         save_name="freq_notExpl_inputs"
     )
 
     plot_xi_histograms(
-        dfs = {"Not explosive": df_concat_notExpl},
+        df = {"Not explosive": df_concat_notExpl},
         var_specs = inputs_scaled,
         save_name="freq_notExpl_inputs_scaled"
     )
     
     plot_histogram_lists(
-        dfs = {"Not explosive": df_concat_notExpl},
+        df = {"Not explosive": df_concat_notExpl},
         x_axis = x_axis_1 + [{"col":"response_fn_19", "transform": np.log10, "label": "Log10(Fountain height) (m)"}],
         save_name="freq_notExpl_1"
     )
 
     plot_histogram_lists(
-        dfs = {"Not explosive": df_concat_notExpl},
+        df = {"Not explosive": df_concat_notExpl},
         x_axis = x_axis_3,
         save_name="freq_notExpl_2"
     )
@@ -326,24 +323,24 @@ if __name__ == '__main__':
     #region -- Plot histograms for notExplosive-Effusive simulations 
 
     plot_xi_histograms(
-        dfs={"Effusive": df_concat_eff},
+        df={"Effusive": df_concat_eff},
         save_name="freq_eff_inputs"
     )
 
     plot_xi_histograms(
-        dfs = {"Effusive": df_concat_eff},
+        df = {"Effusive": df_concat_eff},
         var_specs = inputs_scaled,
         save_name="freq_eff_inputs_scaled"
     )
     
     plot_histogram_lists(
-        dfs = {"Effusive": df_concat_eff},
+        df = {"Effusive": df_concat_eff},
         x_axis = x_axis_1 + [{"col":"response_fn_19", "transform": np.log10, "label": "Log10(Fountain height) (m)"}],
         save_name="freq_eff_1"
     )
 
     plot_histogram_lists(
-        dfs = {"Effusive": df_concat_eff},
+        df = {"Effusive": df_concat_eff},
         x_axis = x_axis_3,
         save_name="freq_eff_2"
     )
@@ -352,24 +349,24 @@ if __name__ == '__main__':
     #region -- Plot histograms for notExplosive-Fountaining simulations 
 
     plot_xi_histograms(
-        dfs={"Fountaining": df_concat_fount},
+        df={"Fountaining": df_concat_fount},
         save_name="freq_fount_inputs"
     )
 
     plot_xi_histograms(
-        dfs = {"Fountaining": df_concat_fount},
+        df = {"Fountaining": df_concat_fount},
         var_specs = inputs_scaled,
         save_name="freq_fount_inputs_scaled"
     )
     
     plot_histogram_lists(
-        dfs = {"Fountaining": df_concat_fount},
+        df = {"Fountaining": df_concat_fount},
         x_axis = x_axis_1 + [{"col":"response_fn_19", "transform": np.log10, "label": "Log10(Fountain height) (m)"}],
         save_name="freq_fount_1"
     )
 
     plot_histogram_lists(
-        dfs = {"Fountaining": df_concat_fount},
+        df = {"Fountaining": df_concat_fount},
         x_axis = x_axis_3,
         save_name="freq_fount_2"
     )
