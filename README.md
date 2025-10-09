@@ -181,7 +181,8 @@ The script can be easily customized to:
   * **Optional parameters:**
     * `y_label` → Custom label for Y-axis. Default: the descriptive label from the CSV header.
     * `n_step` → Sampling step for scatter plot (useful for large datasets). Default: 3.
-    * `save_name` → Filename (without extension) for saving plot. If not present, it is  auto-generated.
+    * `fig_num` → Figure number, used to autogenerate the name to save the plot if that is not defined by the user. Default: None.
+    * `save_name` → Filename (without extension) for saving plot. If not present, it is auto-generated (using `fig_num` if present).
     * `save_dir` → Folder to save plots. Default: `plot_correlations`.
     * `stats` → Dictionary from `bin_and_average()`. If provided, mean values are plotted.
 
@@ -240,8 +241,8 @@ The script can be easily customized to:
     ```
   * **Optional parameters:**
     * `n_step` → Sampling step for scatter plot (useful for large datasets). Default: 3.
-    * `fig_num` → figure number, useful to create multiple figures.
-    * `save_name` → filename (without extension) for saving the figure. If not present, it is auto-generated.
+    * `fig_num` → Figure number, used to autogenerate the name to save the plot if that is not defined by the user. Default: None.
+    * `save_name` → Filename (without extension) for saving plot. If not present, it is auto-generated (using `fig_num` if present).
     * `save_dir` → folder where figures are saved. Default: `plot_correlations`.
     * `stats` → dictionary resulting from `bin_and_average()`. If provided, the binned means are plotted.
 
@@ -282,7 +283,7 @@ The script presents one plot utility:
 - `plot_sobol_indices`: plot the sobol indices `sobol_indices*` of all variables or of a selection of variables.
 
 ### Usage
-
+Run from terminal:
 ```bash
 python plot_Sobol.py
 ```
@@ -340,84 +341,127 @@ These functions accept just one dataset (differently from other plotting utiliti
 
 ### Usage
 Run from the terminal:
+
 ```bash
 python plot_histograms.py
 ```
-
 
 ### Output
 Figures are saved in the folder `plot_histograms/` as `svg` files.
 Each figure corresponds to a specific simulation group (e.g., All simulations, Explosive, Effusive, etc.) and variable set.
 
 ### Customization
-The script can be easily customized to plot histograms of different variables and from different dataframes by modifying the calls to `plot_xi_histograms(...)` and `plot_histogram_lists(...)`.
-
-* Change the number of bins (`bins`) used to create the histograms.
+The script can be easily customized to plot histograms of different variables and from different dataframes by modifying the calls to `plot_xi_histograms` and `plot_histogram_lists`.
 
 * The function `plot_xi_histograms()` is designed to plot histograms for all the input parameters without the need to specify them (because it will automatically look for columns with header `xi`) or only a selection of them. The plot function can be customized by modifying its call.
-  * `df` → dictionary of datasets or simple dataset.
-    Example:
-
+  * `df` → dictionary of dataset or simple dataset.
+    Pass the dataset as a dictionary to specify the name visualized in the plot legends, like:
     ```python
     df = {"Explosive": df_concat_expl}
     ```
-    
-    You can pass directly the DataFrame instead of a dictionary, like:
+    Or pass just the dataFrame, like:
     ```python
-    dfs = {df_concat}
+    df = {df_concat}
     ```
-  * `response_col` → response function to analyze (e.g. `response_fn_1`, `response_fn_15`).
+    and the default name visualized in the plots' legends is "Simulations".
   * **Optional parameters:**
-    * `y_label` → Custom label for Y-axis. Default: the descriptive label from the CSV header.
-    * `n_step` → Sampling step for scatter plot (useful for large datasets). Default: 3.
-    * `save_name` → Filename (without extension) for saving plot. If not present, it is  auto-generated.
-    * `save_dir` → Folder to save plots. Default: `plot_correlations`.
-    * `stats` → Dictionary from `bin_and_average()`. If provided, mean values are plotted.
+    * `var_specs`: List of dictonaries that contain a selection of variables to plot. Default: `None`, therefore all the `xi` variables are considered.
+    A dictonary allows several keys:
+      * `col` → String for `x1`, or `x2`, etc.
+      * `transform` (optional) → Transformation, linear or not, to apply to the variable. For example:
+        ```python
+        "transform": lambda x: x/1e6
+        "transform": lambda x: x-273
+        "transform": np.log10
+        ```
+      * `label` (optional) → String for the label to use for the x axis. If not provided, the original label from the dataFrame is used. For example:
+        ```python
+        "label": "Pressure [MPa]"
+        "label": "Temperature [°C]"
+        "label": "Log10(MFR) [kg/s]"
+        ```
+      * `color` (optional) → Color of the bars. If not provided, blue is used.
+      * `edgecolor` (optional) → Color of the bars' edges. If not provided, black is used.
+      * `xlim` (optional) → Extremes for the x-axis; usage: `(a,b)`. If not provided, the limits depend on the variable values.
+      * `xticks` and `xticklabels` (optionals) → Print only specific values on the x axis; usage: `[-1,0,0.5,1]`. Possibly, associate them with different labels; example: `[A,B,C,D]`.
+    * `bins` → N umber of bins for the hinstograms. Default: 30.
+    * `fig_num` → Figure number, used to autogenerate the name to save the plot if that is not defined by the user. Default: None.
+    * `save_name` → Filename (without extension) for saving plot. If not present, it is auto-generated (using `fig_num` if present).
+    * `save_dir` → Folder to save plots. Default: `plot_histograms`.
 
   Example of usage:
   ```python
-  utils.plot_xi_vs_response_fn(
-    dfs={
-        "Explosive": df_concat_expl,
-        "notExplosive": df_concat_notExpl
-    },
-    input_Min=input_Min,
-    input_Max=input_Max,
-    response_col='response_fn_1',
-    n_step=2,
-    save_name='my_plot',
-    save_dir='plots',
-    stats=stats
+  plot_xi_histograms(
+    df = {"All simulations":df_concat},
+    bins=25,
+    var_specs = [
+        {"col": "x1"},
+        {"col": "x2"}
+    ],
+    save_name="freq_allSim_x1&x2",
+    fig_num=5
   )
   ```
-  If `save_name` is not provided, the function generates a name like `corr_Explosive_notExplosive_xi_response_fn_1`.
+  If `save_name` is not provided, the function generates a name like `freq_All simulations_xi_fig5`.
+ 
+
+* The function `plot_histograms_list()` is designed to plot histograms for a list of variables, both `xi` and `response_fn_i`. The plot function can be customized by modifying its call.
+  * `df` → dictionary of dataset or simple dataset.
+    Pass the dataset as a dictionary to specify the name visualized in the plot legends, like:
+    ```python
+    df = {"Explosive": df_concat_expl}
+    ```
+    Or pass just the dataFrame, like:
+    ```python
+    df = {df_concat}
+    ```
+    and the default name visualized in the plots' legends is "Simulations".
+  * `x_axis`: List of dictonaries that contain a selection of variables to plot. Default: `None`, therefore all the `xi` variables are considered. A dictonary allows several keys:
+    * `col` → String for `x1`, or `response_fn_1`, etc.
+    * `transform` (optional) → Transformation, linear or not, to apply to the variable. For example:
+      ```python
+      "transform": lambda x: x/1e6
+      "transform": lambda x: x-273
+      "transform": np.log10
+      ```
+    * `label` (optional) → String for the label to use for the x axis. If not provided, the original label from the dataFrame is used. For example:
+      ```python
+      "label": "Pressure [MPa]"
+      "label": "Temperature [°C]"
+      "label": "Log10(MFR) [kg/s]"
+      ```
+    * `color` (optional) → Color of the bars. If not provided, blue is used.
+    * `edgecolor` (optional) → Color of the bars' edges. If not provided, black is used.
+    * `xlim` (optional) → Extremes for the x-axis; usage: `(a,b)`. If not provided, the limits depend on the variable values.
+    * `xticks` and `xticklabels` (optionals) → Print only specific values on the x axis; usage: `[-1,0,0.5,1]`. Possibly, associate them with different labels; example: `[A,B,C,D]`.
+  * **Optional parameters:**
+    * `bins` → N umber of bins for the hinstograms. Default: 30.
+    * `fig_num` → Figure number, used to autogenerate the name to save the plot if that is not defined by the user. Default: None.
+    * `save_name` → Filename (without extension) for saving plot. If not present, it is auto-generated (using `fig_num` if present).
+    * `save_dir` → Folder to save plots. Default: `plot_histograms`.
+
+  Example of usage:
+  ```python
+  plot_xi_histograms(
+    df = {"Effusive": df_concat_eff},
+    bins=25,
+    var_specs = [
+        {"col": "x3"},
+        {"col": "response_fn_2"}
+    ],
+    save_name="freq_eff_x3&respFn2",
+    fig_num=5
+  )
+  ```
+  If `save_name` is not provided, the function generates a name like `freq_Effusive_my_plot_lists_fig5`.
 
 
 
 
 
-Example of usage:
-```python
-response_labels = {
-    'response_fn_1': 'Gas volume fraction',
-    'response_fn_15': 'Fragmentation depth',
-    'response_fn_12': 'Mass flow rate',
-    'response_fn_4': 'Exit velocity',
-    'response_fn_16': 'Exit crystal content',
-    'response_fn_28': 'Undercooling @Frag'
-}
 
-plot_sobol_indices(
-    sobol_indices, 
-    xi_labels=['Press.', 'Temp.', 'Radius', 'H₂O', 'CO₂', 'Crystals'],
-    response_labels=response_labels,
-    save_name='sobol_indices',
-    save_dir='my_plot_Sobol'
-)
-```
-This call produces a row of stacked bar plots, one for each response function in `response_labels`. Each bar shows the normalized contribution of the input parameters to the variance of the response.
 
-If `save_name` is not provided, the plot is saved as `plot_Sobol`.
+
 
 
 ## Notes 
