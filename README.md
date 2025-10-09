@@ -42,7 +42,7 @@ This repository provides tools to:
     * [Output](#output-4)
     * [Customization](#customization-4)
 
-8. [Notes](#notes) 
+8. [Notes & to-do list](#notes-&-todo-list) 
 
 ##  1. Repository Structure
 
@@ -538,14 +538,21 @@ The function `plot_histograms_list()` is designed to produce frequency plots for
   If `save_name` is not provided, the function generates a name like `freq_my_plot_lists_fig3`.
 
 
-
-
-
-
-
-
-
-## Notes 
+## Notes & to-do list
 
 All scripts are designed to be modified by the user to adapt to specific workflows. Important: alternative eruptive regimes can be added to the current (explosive, not explosive, not explosive effusive, not explosive fountaining).
 
+### To-do list
+
+* [x] Translate all the comments in the scripts from Italian to English
+* [ ] At the end of `extract_allData.py`, create a file with some generic info such as:
+    - number of all simulations (`number_tot_sim` in `extract_allData.py`) (usually 1000, 10000)
+    - number of input parameters (`n_xi` in `extract_allData.py`)
+    - number of null simulations (`number_null_sim` in `my_lib_extract_data.py`)
+    - number of explosive simulations
+    - number of not explosive simulations
+    - number of effusive simulations
+    - number of fountaining simulations
+* [ ] In `plot_correlation.py`, in the definition of `response_col`, `x_axis` and `y_axis` consider not using tuples, but dictionaries like `var_specs` in `plot_histograms.py`
+* [ ] In `plot_sobol.py`, in the definition of `response_col`, `x_axis` and `y_axis` consider not using tuples, but dictionaries like `var_specs` in `plot_histograms.py`
+ 
