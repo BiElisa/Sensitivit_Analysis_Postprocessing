@@ -42,7 +42,7 @@ This repository provides tools to:
     * [Output](#output-4)
     * [Customization](#customization-4)
 
-8. [Notes & to-do list](#notes-&-to-do-list) 
+8. [Notes & to-do list](#8-notes-&-to-do-list) 
 
 ##  1. Repository Structure
 
@@ -544,7 +544,7 @@ All scripts are designed to be modified by the user to adapt to specific workflo
 
 ### To-do list
 
-* [x] Translate all the comments in the scripts from Italian to English
+* [ ] Translate all the comments in the scripts from Italian to English
 * [ ] At the end of `extract_allData.py`, create a file with some generic info such as:
     - number of all simulations (`number_tot_sim` in `extract_allData.py`) (usually 1000, 10000)
     - number of input parameters (`n_xi` in `extract_allData.py`)
