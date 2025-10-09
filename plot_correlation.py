@@ -87,7 +87,11 @@ def plot_xi_vs_response_fn(
     # Se save_name non è specificato, generalo automaticamente
     if save_name is None:
         dfs_keys_str = "_".join(dfs.keys())
-        save_name = f"corr_{dfs_keys_str}_xi_{response_col}"
+        if fig_num is None:
+            save_name = f"corr_{dfs_keys_str}_xi_{response_col}"
+        else:
+            save_name = f"corr_{dfs_keys_str}_xi_{response_col}_fig{fig_num}"
+        print(f"Warning: no filename selected for 'save_name'. File saved as '{save_name}'.\n")
 
     # Richiama plot_correlation_lists
     plot_correlation_lists(
@@ -147,12 +151,6 @@ def plot_correlation_lists(
 
     if len(x_axis) != len(y_axis):
         raise ValueError("Le liste x_axis e y_axis devono avere la stessa lunghezza.")
-    
-    # Se save_name non è specificato, generalo automaticamente
-    if save_name is None:
-        dfs_keys_str = "_".join(dfs.keys())
-        save_name = f"corr_{dfs_keys_str}_my_plot_correlation_lists"
-        print(f"Warning: no filename selected for 'save_name'. File saved as '{save_name}'.\n")
     
     nonlinear_funcs = [np.log10, np.log, np.sqrt, np.exp] # serve per le eventuali trasformazion per x e y
 
@@ -272,10 +270,18 @@ def plot_correlation_lists(
 
     plt.tight_layout()
 
-    if save_name:
-        os.makedirs(save_dir, exist_ok=True)
-        plt.savefig(os.path.join(save_dir, f"{save_name}.svg"))
-        print(f"Figura salvata in {save_dir} as {save_name}")
+    # Se save_name non è specificato, generalo automaticamente
+    if save_name is None:
+        dfs_keys_str = "_".join(dfs.keys())
+        if fig_num is None:
+            save_name = f"corr_{dfs_keys_str}_my_plot_lists"
+        else:
+            save_name = f"corr_{dfs_keys_str}_my_plot_lists_fig{fig_num}"
+        print(f"Warning: no filename selected for 'save_name'. File saved as '{save_name}'.\n")
+
+    os.makedirs(save_dir, exist_ok=True)
+    plt.savefig(os.path.join(save_dir, f"{save_name}.svg"))
+    print(f"Figura salvata in {save_dir} as {save_name}")
 
     #plt.show(block=True)
     plt.pause(1.3)

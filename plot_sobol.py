@@ -1,16 +1,14 @@
+import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import os
-import sys
-import shutil
-import subprocess
 import my_lib_process_utils as utils
 
 def plot_sobol_indices(
         sobol_indices, 
         xi_labels=None, 
         response_labels=None, 
+        fig_num=None,
         save_name=None, 
         save_dir="plot_Sobol"):
     """
@@ -47,11 +45,6 @@ def plot_sobol_indices(
                 f"ma ne sono state passate {len(xi_labels)}."
             )
 
-    # --- gestione nome file ---
-    if save_name is None:
-        save_name = "sobol_indices_my_plot"
-        print(f" * Warning * : no filename selected for 'save_name'. File saved as '{save_name}'.\n")
-
     # --- filtriamo le response_fn da plottare ---
     responses_to_plot = list(response_labels.keys()) if response_labels else list(sobol_indices.keys())
     n_resp = len(responses_to_plot)
@@ -80,10 +73,17 @@ def plot_sobol_indices(
     fig.suptitle('Sobol indices normalized', fontsize=14)
     plt.tight_layout(rect=[0,0,1,0.95])
 
-    if save_name:
-        os.makedirs(save_dir, exist_ok=True)
-        plt.savefig(os.path.join(save_dir, f"{save_name}.svg"))
-        print(f"Figura salvata in {save_dir} as {save_name}")
+    # --- gestione nome file ---
+    if save_name is None:
+        if fig_num is None:
+            save_name = f"sobol_indices_my_plot"
+        else:
+            save_name = "sobol_indices_my_plot_fig{fig_num}"
+        print(f" * Warning * : no filename selected for 'save_name'. File saved as '{save_name}'.\n")
+
+    os.makedirs(save_dir, exist_ok=True)
+    plt.savefig(os.path.join(save_dir, f"{save_name}.svg"))
+    print(f"Figura salvata in {save_dir} as {save_name}")
 
     #plt.show()
     plt.pause(1.3)
