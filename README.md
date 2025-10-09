@@ -3,9 +3,14 @@
 Scripts to perform the postprocessing of sensitivity analysis results obtained with **DAKOTA** and **MAMMA**.  
 This repository provides tools to:  
 - Extract and organize raw simulation outputs into `csv` files.  
+- Classify the eruptions in 3 regimes (or styles):
+  * Explosive
+  * (Not explosive) Effusive
+  * (Not Explosive) Fountaining
 - Generate correlation plots between input parameters and response functions.  
-- Generate plot Sobol indices for variance-based sensitivity analysis.  
-- (Planned) Extend functionality to frequency plots and other postprocessing tasks.  
+- Generate plot Sobol indices for variance-based sensitivity analysis. 
+- Generate frequency plot as histograms for any variable.
+- Generate frequency plot for any variable to compare behavior of different eruptive styles. 
 
 ## 📑 Table of Contents  
 
@@ -400,8 +405,8 @@ The script can be easily customized to plot histograms of different variables an
     df = {"All simulations":df_concat},
     bins=25,
     var_specs = [
-        {"col": "x1"},
-        {"col": "x2"}
+        {"col": "x1", "transform": lambda x: x/1e6, "label": "Pressure [MPa]"},
+        {"col": "x2", "transform": lambda x: x-273, "label": "Temperature [°C], "color": "r"}
     ],
     save_name="freq_allSim_x1&x2",
     fig_num=5
@@ -451,8 +456,8 @@ The script can be easily customized to plot histograms of different variables an
     df = {"Effusive": df_concat_eff},
     bins=25,
     var_specs = [
-        {"col": "x3"},
-        {"col": "response_fn_2"}
+        {"col": "x3", "transform": lambda x: x-273, "label": "Temperature [°C]", "xlim": (1100, 1200)},
+        {"col": "response_fn_2", "transform": np.log10, "label": "Log10(MFR) [kg/s]", "color": "lime"}
     ],
     save_name="freq_eff_x3&respFn2",
     save_dir="my_plot_histograms",
@@ -542,8 +547,5 @@ The function `plot_histograms_list()` is designed to produce frequency plots for
 
 ## Notes 
 
-All scripts are designed to be modified by the user to adapt to specific workflows. For example:
-- Change the label names going into...
-
-Figures are saved in .svg format for high-quality vector graphics. The user can change it going to...
+All scripts are designed to be modified by the user to adapt to specific workflows. Important: alternative eruptive regimes can be added to the current (explosive, not explosive, not explosive effusive, not explosive fountaining).
 
