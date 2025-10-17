@@ -15,7 +15,8 @@ def plot_frequencies_eruptive_styles(
         N_bins=50, 
         fig_num=None, 
         save_name=None,
-        save_dir="plot_frequencies"
+        save_dir="plot_frequencies",
+        plot_total=True
     ):
     """
     Plotta le frequenze delle variabili per diversi stili eruttivi.
@@ -53,20 +54,20 @@ def plot_frequencies_eruptive_styles(
         label = var.get("label", None)
 
         # Recuperiamo i valori
-        vals       = df_concat      [col].dropna().values
-        vals_expl  = df_concat_expl [col].dropna().values if df_concat_expl is not None  else np.array([])
-        vals_eff   = df_concat_eff  [col].dropna().values if df_concat_eff is not None   else np.array([])
-        vals_fount = df_concat_fount[col].dropna().values if df_concat_fount is not None else np.array([])
+        vals       = df_concat      [col].dropna().values 
+        vals_expl  = df_concat_expl [col].dropna().values if df_concat_expl  is not None  else np.array([])
+        vals_eff   = df_concat_eff  [col].dropna().values if df_concat_eff   is not None  else np.array([])
+        vals_fount = df_concat_fount[col].dropna().values if df_concat_fount is not None  else np.array([])
 
         # Applica la trasformazione se presente
         if transform is not None:
             vals       = transform(vals)
-            if df_concat_expl is not None:  vals_expl  = transform(vals_expl)
-            if df_concat_eff is not None:   vals_eff   = transform(vals_eff)
+            if df_concat_expl  is not None: vals_expl  = transform(vals_expl)
+            if df_concat_eff   is not None: vals_eff   = transform(vals_eff)
             if df_concat_fount is not None: vals_fount = transform(vals_fount)
 
-            if label is None:
-                warnings.warn(f"La variabile '{col}' ha una trasformazione ma nessuna label definita!")
+        if label is None:
+            warnings.warn(f"La variabile '{col}' ha una trasformazione ma nessuna label definita!")
 
         if len(vals) == 0:
             continue
@@ -116,10 +117,11 @@ def plot_frequencies_eruptive_styles(
         if y_eff is not None:   plot_data.append((y_eff,   'Effusive', 'ks', 'dodgerblue'))
         if y_fount is not None: plot_data.append((y_fount, 'Fountaining', 'ko', 'lime'))
         if y_expl is not None:  plot_data.append((y_expl,  'Explosive', 'k>', 'red'))
-        plot_data.append((y_total, 'Total', 'kd', 'gold'))
+        if plot_total:
+            plot_data.append((y_total, 'Total', 'kd', 'gold'))
 
         for y_vals, label_plot, marker, color in plot_data:
-            ax.plot(x, y_vals, marker, markerfacecolor=color, markersize=5, alpha=0.5, label=label_plot)
+            ax.plot(x, y_vals, marker, markerfacecolor=color, markersize=5, alpha=0.9, label=label_plot)
 
         if xscale is not None:
             ax.set_xscale(xscale)
@@ -199,20 +201,20 @@ if __name__ == '__main__':
 
     #region -- Plot frequencies to compare the different eruptive styles
 
-    N_bins=50
+    N_bins=40
 
     variables_to_plot = [
-        {"col": "x2", "transform": lambda x: x-273, "label": "Inlet temperature [°C]", "ylim_max": 22},
-        {"col": "x1", "transform": lambda x: x/1e6, "label": "Inlet pressure [MPa]", "ylim_max": 22},
-        {"col": "x3", "ylim_max": 22},
-        {"col": "x4", "transform": lambda x: x*100, "label": "Inlet H2O content [wt.%]", "ylim_max": 22},
-        {"col": "x5", "transform": lambda x: x*100, "label": "Inlet CO2 content [wt.%]", "ylim_max": 22},
-        {"col": "x6", "transform": lambda x: x*100, "label": "Inlet phenocrystal content [vol.%]", "ylim_max": 22}
+        {"col": "x2", "transform": lambda x: x-273, "label": "Inlet temperature [°C]"},
+        {"col": "x1", "transform": lambda x: x/1e6, "label": "Inlet pressure [MPa]"},
+        {"col": "x3"},
+        {"col": "x4", "transform": lambda x: x*100, "label": "Inlet H2O content [wt.%]"},
+        {"col": "x5", "transform": lambda x: x*100, "label": "Inlet CO2 content [wt.%]"},
+        {"col": "x6", "transform": lambda x: x*100, "label": "Inlet phenocrystal content [vol.%]"}
     ]
 
     plot_frequencies_eruptive_styles(
         variables_to_plot,
-        df_concat, 
+        df_concat=df_concat, 
         df_concat_expl=df_concat_expl, 
         df_concat_eff=df_concat_eff, 
         df_concat_fount=df_concat_fount, 
@@ -238,7 +240,8 @@ if __name__ == '__main__':
         df_concat_eff=df_concat_eff, 
         df_concat_fount=df_concat_fount, 
         N_bins=N_bins, 
-        save_name=f"freq_output_parameters_{N_bins}bins"
+        save_name=f"freq_output_parameters_{N_bins}bins",
+        plot_total=False
     )
     #endregion
 
