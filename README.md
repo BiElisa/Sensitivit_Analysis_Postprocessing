@@ -517,6 +517,7 @@ The function `plot_histograms_list()` is designed to produce frequency plots for
     * `fig_num` → Figure number, used to autogenerate the name to save the plot if that is not defined by the user. Default: None.
     * `save_name` → Filename (without extension) for saving plot. If not present, it is auto-generated (using `fig_num` if present).
     * `save_dir` → Folder to save plots. Default: `plot_frequencies`.
+    * `plot_total` → Flag to plot the frequencies of all simulations or not. Default: `True`.
 
   Example of usage:
   ```python
