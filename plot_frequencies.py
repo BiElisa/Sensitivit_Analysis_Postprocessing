@@ -119,7 +119,7 @@ def plot_frequencies_eruptive_styles(
         plot_data.append((y_total, 'Total', 'kd', 'gold'))
 
         for y_vals, label_plot, marker, color in plot_data:
-            ax.plot(x, y_vals, marker, markerfacecolor=color, markersize=5, label=label_plot)
+            ax.plot(x, y_vals, marker, markerfacecolor=color, markersize=5, alpha=0.5, label=label_plot)
 
         if xscale is not None:
             ax.set_xscale(xscale)
@@ -217,7 +217,7 @@ if __name__ == '__main__':
         df_concat_eff=df_concat_eff, 
         df_concat_fount=df_concat_fount, 
         N_bins=N_bins, 
-        save_name="freq_input_parameters"
+        save_name=f"freq_input_parameters_{N_bins}bins"
     )
 
     variables_to_plot = [
@@ -238,7 +238,7 @@ if __name__ == '__main__':
         df_concat_eff=df_concat_eff, 
         df_concat_fount=df_concat_fount, 
         N_bins=N_bins, 
-        save_name="freq_output_parameters"
+        save_name=f"freq_output_parameters_{N_bins}bins"
     )
     #endregion
 
