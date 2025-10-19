@@ -12,30 +12,11 @@ def extract_allData (verbose = True, pause = True):
 
     print("\n\n ---- Start the execution of extract_allData ----\n")
 
-    # Apri una finestra di dialogo per selezionare un file .bak
-    root = tk.Tk()
-    root.withdraw()
-    filepath = filedialog.askopenfilename(
-        title="Seleziona un file '.bak' da una cartella workdir.N",
-        filetypes=[("Bak files", "*.bak")]
-    )
-
-    if not filepath:
-        print("Nessun file selezionato. Operazione annullata.")
-        return
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    if verbose:
+        print(f"The current script is launched from: \n'{script_dir}'\n")
 
     #region -- Importiamo il tabellone generato da Dakota 
-
-    # Trova la cartella principale risalendo dal percorso del file selezionato
-    # Ad esempio, da '.../workdir.1/file.bak' si ottiene '...'
-    main_dir = os.path.dirname(os.path.dirname(filepath))
-
-    # Estrai il nome del file di riferimento
-    bak_name = os.path.basename(filepath)
-        
-    if verbose:
-        print(f"Cartella principale identificata: {main_dir}")
-        print(f"Nome del file '.bak' di riferimento: {bak_name}")
 
     # Importa i dati tabulari di Dakota per determinare N e memorizzare {xi} e {response_fn_i}
     df_dakota_output = utils.import_dakota_tabular_new()
@@ -44,18 +25,21 @@ def extract_allData (verbose = True, pause = True):
 
     number_tot_sim = len(df_dakota_output)
     if verbose:
-        print(f"Totale simulazioni trovate {number_tot_sim}.")
+        print(f"Totale simulazioni trovate: {number_tot_sim}.\n")
 
     #endregion
 
     #region -- Puliamo il tabellone generato da dakota dalle simulazioni nulle 
         
     if verbose:
-        print("Andiamo ad eliminare le simulazioni nulle.")
+        print(" --- Eliminiamo le simulazioni nulle ---\n")
 
     mask_invalid = (df_dakota_output["response_fn_1"] == -1) | (df_dakota_output["response_fn_12"] > 5e9)
 
     df_dakota_clean = df_dakota_output.loc[~mask_invalid].reset_index(drop=True)
+
+    if verbose:
+        print(f"{number_tot_sim - mask_invalid.sum()} simulazioni valide, {mask_invalid.sum()} eliminate perche` nulle.\n")
 
     #endregion
 
@@ -89,12 +73,29 @@ def extract_allData (verbose = True, pause = True):
     n_xi = len(xi_cols)
     if verbose:
         print(f"Trovate {n_xi} variabili di input xi: {xi_cols}")
+        
+    templateFile_path = os.path.join(script_dir, "conduit_solver.template")
 
-    if not os.path.exists("conduit_solver.template"):
-        print("Abort: The file 'conduit_solver.template' is not in the folder.")
-        sys.exit(1)
+    if not os.path.exists(templateFile_path):
+        print("⚠️  Il file 'conduit_solver.template' non è stato trovato nella cartella dello script.")
+        print("   Selezionalo manualmente...")
 
-    xi_labels = utils.get_xi_labels_from_template(df_dakota_output, "conduit_solver.template",)
+        # Apri finestra di dialogo per cercarlo
+        root = tk.Tk()
+        root.withdraw()
+        templateFile_path = filedialog.askopenfilename(
+            title="Seleziona il file 'conduit_solver.template'",
+            filetypes=[("Template file", "*.template")]
+        )
+
+        if not templateFile_path:
+            print("❌ Nessun file selezionato. Operazione annullata.")
+            sys.exit(1)
+
+    else:
+        print(f"Trovato il file template: \n{templateFile_path}\n")
+
+    xi_labels = utils.get_xi_labels_from_template(df_dakota_output, templateFile_path)
     if verbose:
         print(f"xi_labels = \n{xi_labels}")
 
@@ -132,7 +133,10 @@ def extract_allData (verbose = True, pause = True):
     #endregion
 
     #region -- Salvataggio del tabellone cosi` composto come CSV file
-    csv_dir = "csv_files"
+
+    #Creiamo la cartella "csv_files" dentro la cartella dello script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    csv_dir = os.path.join(script_dir, "csv_files")
     os.makedirs(csv_dir, exist_ok=True)
 
     filename_simulations = "simulations"
@@ -144,12 +148,39 @@ def extract_allData (verbose = True, pause = True):
         f.write(",".join(labels_row) + "\n")
         df_dakota_clean.to_csv(f, index=False, header=False, encoding="utf-8", float_format="%.6f")
 
-    print(f"I dati delle simulazioni avvenute con successo vengono salvati in '{save_path}/{filename_simulations}.csv'.")
-    print(f"{number_tot_sim - mask_invalid.sum()} simulazioni valide, {mask_invalid.sum()} eliminate perche` nulle.")
-    print("I data frame generati da questo programma hanno doppia intestazione.\n")
+    print(f"I dati delle simulazioni avvenute con successo vengono salvati come data frame in '{save_path}'.")
+    print("!!! I data frame generati da questo programma hanno doppia intestazione.\n")
         
     if verbose:
-        print(" --- Passiamo ad estrapolare maggiori informazioni. ---\n")
+        print(" --- Passiamo ad estrapolare maggiori informazioni ---\n")
+
+    #endregion
+
+    #region -- Recuperiamo il nome dei bak_file ed il percorso delle cartelle workdir
+
+    # Apri una finestra di dialogo per selezionare un file .bak
+    root = tk.Tk()
+    root.withdraw()
+    filepath = filedialog.askopenfilename(
+        title="Seleziona un file '.bak' da una cartella workdir.N",
+        filetypes=[("Bak files", "*.bak")],
+        initialdir=script_dir # Opens the dialogue window in the script folder
+    )
+
+    if not filepath:
+        print("Nessun file selezionato. Operazione annullata.")
+        return
+
+    # Trova la cartella principale risalendo dal percorso del file selezionato
+    # Ad esempio, da '.../workdir.1/file.bak' si ottiene '...'
+    main_dir = os.path.dirname(os.path.dirname(filepath))
+
+    # Estrai il nome del file di riferimento
+    bak_name = os.path.basename(filepath)
+        
+    if verbose:
+        print(f"Cartella principale identificata: \n{main_dir}")
+        print(f"Nome del file '.bak' di riferimento: {bak_name}")
 
     #endregion
 

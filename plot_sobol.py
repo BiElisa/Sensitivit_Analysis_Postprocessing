@@ -214,7 +214,7 @@ if __name__ == '__main__':
 
     # chiavi = response_fn, 
     # valori = array di indici normalizzati per ciascun xi
-    xi_labels = ['Press.','Temp.','Radius','H2O','Crystals', 'CO2']
+    xi_labels = ['Press.','Temp.','Radius','H2O','CO2','Crystals']
     response_labels_example = {
         'response_fn_1': 'Gas volume fraction',
         'response_fn_15': 'Fragmentation depth',

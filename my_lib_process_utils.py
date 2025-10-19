@@ -506,6 +506,12 @@ def get_xi_labels_from_template(df, template_file):
                             xi_labels[matches[1]] = 'Inlet CO2 content [wt.]'
                         elif len(matches) == 1:
                             xi_labels[xi] = 'Inlet H2O content [wt.]'
+                    elif var_name == 'X_TOT_MD_IN':
+                        if len(matches) == 2:
+                            xi_labels[matches[0]] = 'Inlet H2O content [wt.]'
+                            xi_labels[matches[1]] = 'Inlet CO2 content [wt.]'
+                        elif len(matches) == 1:
+                            xi_labels[xi] = 'Inlet H2O content [wt.]'
                     else:
                         xi_labels[xi] = var_name
 
