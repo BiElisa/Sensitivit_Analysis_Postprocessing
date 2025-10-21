@@ -111,11 +111,12 @@ The script generates 5 CSV files (plus 5 optional) organized by eruptive style (
 `data_allConcat_notExplosive_fountaining.csv`
 
 Optionals (saved if `save_all_files=true`):
-  `data_at_fragmentation_total.csv`
-  `data_at_inlet_total.csv`
-  `data_at_vent_total.csv`
-  `data_average_total.csv`
-  `data_allConcat_total.csv`
+
+- `data_at_fragmentation_total.csv`
+- `data_at_inlet_total.csv`
+- `data_at_vent_total.csv`
+- `data_average_total.csv`
+- `data_allConcat_total.csv`
 
 Each CSV file uses a *two-row header*:
 - **level 0:** technical names (`x1`, `response_fn_12`, …)  
@@ -176,9 +177,9 @@ python plot_correlation.py
 
 ### Customization
 
-The script can be easily customized to:
+Change the number of bins (`N_bins` in `plot_correlation.py`) used to compute the statistics with the function `bin_and_average()`.
 
-* Change the number of bins (`N_bins`) used to compute the statistics with the function `bin_and_average()`.
+The script reads from the external file `user_plot_correlation.py` the instructions to create the plot, and such a file can be easily customised as follows.
 
 * The function `plot_xi_vs_response_fn()` is designed to plot the correlation between all the input parameters (without the need to specify them, because it will automatically look for columns with header `xi`) and a response function. The plot function can be customized by modifying its call.
   * `dfs` → dictionary of datasets to compare.
@@ -286,7 +287,6 @@ The script can be easily customized to:
   If `save_name` is not provided, the function generates a name like `corr_Explosive_Effusive_Fountaining_my_plot_lists`.
 
 
-
 ## 5. Sobol Indices (`plot_sobol.py`) 
 
 Plot Sobol sensitivity indices for selected response functions.
@@ -304,16 +304,16 @@ The script presents one plot utility:
 ### Usage
 Run from terminal:
 ```bash
-python plot_Sobol.py
+python plot_sobol.py
 ```
 
 ### Output
 
-Figures are saved in `plot_Sobol/` as 'svg' files.
+Figures are saved in `plot_sobol/` as 'svg' files.
 
 ### Customization
 
-The script can be easily customized to plot different Sobol indices and from different dataframes by modifying the call to `plot_sobol_indices()`.
+The script reads from the external file `user_plot_sobol.py` the instructions to create the plot, and such a file can be easily customized to plot different Sobol indices and from different dataframes by modifying the call to `plot_sobol_indices()`.
 * `sobol_indices` → dictionary of sobol indices computed by the function `compute_sobol_indices()`.
 * **Optional parameters**
   * `xi_labels` → list of strings for the input parameters. Must have the same length as the number of xi insobol_indices. 
@@ -370,7 +370,7 @@ Figures are saved in the folder `plot_histograms/` as `svg` files.
 Each figure corresponds to a specific simulation group (e.g., All simulations, Explosive, Effusive, etc.) and variable set.
 
 ### Customization
-The script can be easily customized to plot histograms of different variables and from different dataframes by modifying the calls to `plot_xi_histograms` and `plot_histogram_lists`.
+The script reads from the external file `user_plot_histograms.py` the instructions to create the plot, and such a file can be easily customized to plot histograms of different variables and from different dataframes by modifying the calls to `plot_xi_histograms` and `plot_histogram_lists`.
 
 * The function `plot_xi_histograms()` is designed to plot histograms for all the input parameters without the need to specify them (because it will automatically look for columns with header `xi`) or only a selection of them. The plot function can be customized by modifying its call.
   * `df` → dictionary of dataset or simple dataset.
@@ -499,7 +499,7 @@ Figures are saved in the folder `plot_frequencies/` as `svg` files.
 Each figure corresponds to a specific simulation group (e.g., All simulations, Explosive, Effusive, etc.) and variable set.
 
 ### Customization
-The script can be easily customized to have frequencies plots of different variables and from different dataframes by modifying the calls to `plot_frequencies_eruptive_styles`.
+The script reads from the external file `user_plot_frequencies.py` the instructions to create the plot, and such a file can be easily customized to have frequencies plots of different variables and from different dataframes by modifying the calls to `plot_frequencies_eruptive_styles`.
 
 The function `plot_histograms_list()` is designed to produce frequency plots for a list of variables, both `xi` and `response_fn_i`. The plot function can be customized by modifying its call.
   * `variables_to_plot` → List of dictionaries with the variables to plot with possible transformations, labels and other information. A dictionary allows several keys:
