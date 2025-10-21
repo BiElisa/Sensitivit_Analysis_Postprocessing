@@ -64,22 +64,13 @@ def remove_null_simulations(input_filename, output_filename, save_dir="csv_files
     return df_clean, number_null_sim
 
 
-def check_existance_of_csv_files(filename_total,filename_clean,save_dir,name_program):
+def check_existance_of_csv_files(filename_total,save_dir,name_program):
     
     path_file_total = os.path.join(save_dir, filename_total)
-    path_file_clean = os.path.join(save_dir, filename_clean)
+    #path_file_clean = os.path.join(save_dir, filename_clean)
 
     if os.path.exists(path_file_total):
-        print(f"'{filename_total}' esiste già")
-        
-        if os.path.exists(path_file_clean):
-            print(f"'{filename_clean}' esiste già")
-            print(f"La funzione {name_program} non verrà eseguita. \n")
-            return False # nothing to do
-        
-        print(f"'{filename_clean}' invece va creato")
-        remove_null_simulations(filename_total, filename_clean, save_dir)
-        return False # dopo aver creato il clean, non serve fare altro 
+        print(f"'{filename_total}' esiste già, allora semplicemente lo carico.")
     
     else:
         print(f"'{filename_total}' non trovato: la funzione {name_program} deve essere eseguita.")
@@ -96,12 +87,13 @@ def extract_data_at_frag(main_dir, bak_name, N, save_dir, name_file):
     """
 
     filename_total = name_file + "_total.csv"
-    filename_clean = name_file + ".csv"
 
-    do_it = check_existance_of_csv_files(filename_total,filename_clean,save_dir,extract_data_at_frag.__name__)
+    do_it = check_existance_of_csv_files(filename_total,save_dir,extract_data_at_frag.__name__)
 
     if not do_it:
-        return
+        read_csv_kwargs = {"header": [0,1], "encoding": "utf-8"}
+        df = pd.read_csv(os.path.join(save_dir, filename_total), **read_csv_kwargs)
+        return df
 
     # 1. Inizializza i dizionari per i dati di risposta
     response_data = {f'response_fn_{i}': np.full(N, np.nan) for i in range(20, 39)}
@@ -357,23 +349,20 @@ def extract_data_at_frag(main_dir, bak_name, N, save_dir, name_file):
             response_data['response_fn_37'][index_simul] = reynolds_at_frag
             response_data['response_fn_38'][index_simul] = ratio_u_mix_rel_at_frag
 
-    # 4. Salva i risultati in un file
-    output_df = pd.DataFrame(response_data)
-
     # Dizionario con le descrizioni leggibili
     labels = {
         'response_fn_20': "Viscosity at fragmentation [Pa s]",
         'response_fn_21': "Fraz. cry_1 at fragmentation",
         'response_fn_22': "Fraz. cry_2 at fragmentation",
         'response_fn_23': "Fraz. cry_3 at fragmentation",
-        'response_fn_24': "Total cry. at fragmentation [wt.]",
+        'response_fn_24': "Total cry. at fragmentation [wt.fract.]",
         'response_fn_25': "Temperature at fragmentation [K]",
         'response_fn_26': "Pressure at fragmentation [Pa]",
-        'response_fn_27': "Vesicularity at fragmentation [vol.]",
+        'response_fn_27': "Vesicularity at fragmentation [vol.fract.]",
         'response_fn_28': "Undercooling at fragmentation [K]",
         'response_fn_29': "Free space to save more info at fragm.",
-        'response_fn_30': "Gas_1 diss. at fragmentation [wt.]",
-        'response_fn_31': "Gas_2 diss. at fragmentation [wt.]",
+        'response_fn_30': "Gas_1 diss. at fragmentation [wt.fract.]",
+        'response_fn_31': "Gas_2 diss. at fragmentation [wt.fract.]",
         'response_fn_32': "Elongational strain rate at frag [1/s]",
         'response_fn_33': "Deborah number at fragmentation",
         'response_fn_34': "Reynolds bubble expansion at frag",
@@ -383,19 +372,22 @@ def extract_data_at_frag(main_dir, bak_name, N, save_dir, name_file):
         'response_fn_38': "u_mix / u_rel at fragmentation"
     }
 
-    # Creiamo un DataFrame con una sola riga contenente le descrizioni
-    labels_df = pd.DataFrame([labels])
+    # Costruisci DataFrame con doppia riga di header
 
-    # Concatenazione: prima riga descrizioni, poi dati veri
-    final_df = pd.concat([labels_df, output_df], ignore_index=True)
+    output_df = pd.DataFrame(response_data)
 
-    # Salvataggio in csv
-    final_df.to_csv(os.path.join(save_dir, filename_total), index=False, encoding="utf-8", float_format="%.6f")
+    labels_row = [labels.get(col, col) for col in output_df.columns]
 
-    print(f"\nEstrazione completata. \nDati salvati in {save_dir}/{filename_total}.")
+    multi_index = pd.MultiIndex.from_arrays(
+        [output_df.columns, labels_row],
+        names=["variable", "description"]
+    )
 
-    # Rimuoviamo le simulazini nulle
-    remove_null_simulations(filename_total, filename_clean, save_dir)
+    output_df.columns = multi_index
+
+    print(f"\nEstrazione completata. \n")
+
+    return output_df
 
 
 def extract_data_at_inlet(main_dir, bak_name, N, save_dir, name_file):
@@ -408,12 +400,12 @@ def extract_data_at_inlet(main_dir, bak_name, N, save_dir, name_file):
     """
 
     filename_total = name_file + "_total.csv"
-    filename_clean = name_file + ".csv"
 
-    do_it = check_existance_of_csv_files(filename_total,filename_clean,save_dir,extract_data_at_frag.__name__)
+    do_it = check_existance_of_csv_files(filename_total,save_dir,extract_data_at_inlet.__name__)
 
     if not do_it:
-        return
+        read_csv_kwargs = {"header": [0,1], "encoding": "utf-8"}
+        return pd.read_csv(os.path.join(save_dir, filename_total), **read_csv_kwargs)
 
     # 1. Inizializza i dizionari per i dati di risposta
     response_data = {f'response_fn_{i}': np.full(N, np.nan) for i in range(40, 50)}
@@ -492,38 +484,37 @@ def extract_data_at_inlet(main_dir, bak_name, N, save_dir, name_file):
             response_data['response_fn_48'][index_simul] = x_d_at_inlet[1]
             response_data['response_fn_49'][index_simul] = u_1_at_inlet
 
-
-    # 4. Salva i risultati in un file CSV
-    output_df = pd.DataFrame(response_data)
-
     # Dizionario con le descrizioni leggibili
     labels = {
         'response_fn_40': 'Viscosity at inlet [Pa s]',
         'response_fn_41': 'Fraz. cry_1 at inlet',
         'response_fn_42': 'Fraz. cry_2 at inlet',
         'response_fn_43': 'Fraz. cry_3 at inlet',
-        'response_fn_44': 'Total cry. fract. at inlet [wt.]',
-        'response_fn_45': 'Gas_1 exs. at inlet [vol.]',
-        'response_fn_46': 'Gas_2 exs. at inlet [vol.]',
-        'response_fn_47': 'Gas_1 diss. at inlet [wt.]',
-        'response_fn_48': 'Gas_2 diss. at inlet [wt.]',
+        'response_fn_44': 'Total cry. fract. at inlet [wt.fract.]',
+        'response_fn_45': 'Gas_1 exs. at inlet [vol.fract.]',
+        'response_fn_46': 'Gas_2 exs. at inlet [vol.fract.]',
+        'response_fn_47': 'Gas_1 diss. at inlet [wt.fract.]',
+        'response_fn_48': 'Gas_2 diss. at inlet [wt.fract.]',
         'response_fn_49': 'u_1 at inlet [m/s]'
     }
 
-    # Creiamo un DataFrame con una sola riga contenente le descrizioni
-    labels_df = pd.DataFrame([labels])
+    # Costruisci DataFrame con doppia riga di header
 
-    # Concatenazione: prima riga descrizioni, poi dati veri
-    final_df = pd.concat([labels_df, output_df], ignore_index=True)
+    output_df = pd.DataFrame(response_data)
 
-    # Salvataggio in csv
-    final_df.to_csv(os.path.join(save_dir, filename_total), index=False, encoding="utf-8", float_format="%.6f")
+    labels_row = [labels.get(col, col) for col in output_df.columns]
 
-    #output_df.to_csv('data_at_inlet_total.csv', index=False)
-    print(f"\nEstrazione completata. \nDati salvati in {save_dir}/{filename_total}.")
+    multi_index = pd.MultiIndex.from_arrays(
+        [output_df.columns, labels_row],
+        names=["variable", "description"]
+    )
 
-    # Rimuoviamo le simulazini nulle
-    remove_null_simulations(filename_total, filename_clean, save_dir)
+    output_df.columns = multi_index
+
+    print(f"\nEstrazione completata. \n")
+
+    return output_df
+
 
 
 def extract_data_at_vent (main_dir, bak_name, N, save_dir, name_file):
@@ -536,12 +527,12 @@ def extract_data_at_vent (main_dir, bak_name, N, save_dir, name_file):
     """
     
     filename_total = name_file + "_total.csv"
-    filename_clean = name_file + ".csv"
 
-    do_it = check_existance_of_csv_files(filename_total,filename_clean,save_dir,extract_data_at_frag.__name__)
+    do_it = check_existance_of_csv_files(filename_total,save_dir,extract_data_at_vent.__name__)
 
     if not do_it:
-        return
+        read_csv_kwargs = {"header": [0,1], "encoding": "utf-8"}
+        return pd.read_csv(os.path.join(save_dir, filename_total), **read_csv_kwargs)
 
     # 1. Inizializza i dizionari per i dati di risposta
     response_data = {f'response_fn_{i}': np.full(N, np.nan) for i in range(50, 61)}
@@ -676,43 +667,37 @@ def extract_data_at_vent (main_dir, bak_name, N, save_dir, name_file):
             response_data['response_fn_59'][index_simul] = fluid_breakup
             response_data['response_fn_60'][index_simul] = filament_breakup
 
-
-    # 4. Salva i risultati in un file
-    output_df = pd.DataFrame(response_data)
-
     # Dizionario con le descrizioni leggibili
     labels = {
         'response_fn_50': 'Viscosity at vent [Pa s]',
         'response_fn_51': 'Fraz. crystal 1 at vent',
         'response_fn_52': 'Fraz. crystal 2 at vent',
         'response_fn_53': 'Fraz. crystal 3 at vent',
-        'response_fn_54': 'Total cry. fract. at vent [wt.]',
-        'response_fn_55': 'Gas_1 exs. fraction at vent [vol.]',
-        'response_fn_56': 'Gas_1 exs. fraction at vent [vol.]',
-        'response_fn_57': 'Dissolved gas_1 fraction at vent [wt.]',
-        'response_fn_58': 'Dissolved gas_2 fraction at vent [wt.]',
+        'response_fn_54': 'Total cry. fract. at vent [wt.fract.]',
+        'response_fn_55': 'Gas_1 exs. fraction at vent [vol.fract.]',
+        'response_fn_56': 'Gas_1 exs. fraction at vent [vol.fract.]',
+        'response_fn_57': 'Dissolved gas_1 fraction at vent [wt.fract.]',
+        'response_fn_58': 'Dissolved gas_2 fraction at vent [wt.fract.]',
         'response_fn_59': 'Fluid breakup flag at vent',
         'response_fn_60': 'Filament breakup diameter at vent' # m? mm?
     }
 
-    # Creiamo un DataFrame con una sola riga contenente le descrizioni
-    labels_df = pd.DataFrame([labels])
+    # Costruisci DataFrame con doppia riga di header
 
-    # Concatenazione: prima riga descrizioni, poi dati veri
-    final_df = pd.concat([labels_df, output_df], ignore_index=True)
+    output_df = pd.DataFrame(response_data)
 
-    # Organizziamo per il salvataggio del file nella cartella
-    os.makedirs(save_dir, exist_ok=True)
-    filename = 'data_at_vent_total.csv'
-    save_path = os.path.join(save_dir, filename)
+    labels_row = [labels.get(col, col) for col in output_df.columns]
 
-    # Salvataggio in csv
-    final_df.to_csv(os.path.join(save_dir, filename_total), index=False, encoding="utf-8", float_format="%.6f")
+    multi_index = pd.MultiIndex.from_arrays(
+        [output_df.columns, labels_row],
+        names=["variable", "description"]
+    )
 
-    print(f"\nEstrazione completata. \nDati salvati in {save_dir}/{filename_total}.")
+    output_df.columns = multi_index
 
-    # Rimuoviamo le simulazini nulle
-    remove_null_simulations(filename_total, filename_clean, save_dir)
+    print(f"\nEstrazione completata. \n")
+
+    return output_df
 
 
 def extract_data_average (main_dir, bak_name, N, save_dir, name_file):
@@ -725,12 +710,12 @@ def extract_data_average (main_dir, bak_name, N, save_dir, name_file):
     """
 
     filename_total = name_file + "_total.csv"
-    filename_clean = name_file + ".csv"
 
-    do_it = check_existance_of_csv_files(filename_total,filename_clean,save_dir,extract_data_at_frag.__name__)
+    do_it = check_existance_of_csv_files(filename_total,save_dir,extract_data_average.__name__)
 
     if not do_it:
-        return
+        read_csv_kwargs = {"header": [0,1], "encoding": "utf-8"}
+        return pd.read_csv(os.path.join(save_dir, filename_total), **read_csv_kwargs)
 
     # 1. Inizializza i dizionari per i dati di risposta
     response_data = {f'response_fn_{i}': np.full(N, np.nan) for i in range(70, 76)}
@@ -839,10 +824,6 @@ def extract_data_average (main_dir, bak_name, N, save_dir, name_file):
             response_data['response_fn_74'][index_simul] = cooling_rate_avg
             response_data['response_fn_75'][index_simul] = decompression_rate_avg
 
-
-    # 4. Salva i risultati in un file
-    output_df = pd.DataFrame(response_data)
-
     # Dizionario con le descrizioni leggibili
     labels = {
         'response_fn_70': 'Average magma velocity [m/s]',
@@ -853,17 +834,19 @@ def extract_data_average (main_dir, bak_name, N, save_dir, name_file):
         'response_fn_75': 'Average decompression rate [MPa/s]'
     }
 
-    # Creiamo un DataFrame con una sola riga contenente le descrizioni
-    labels_df = pd.DataFrame([labels])
+    # Costruisci DataFrame con doppia riga di header
 
-    # Concatenazione: prima riga descrizioni, poi dati veri
-    final_df = pd.concat([labels_df, output_df], ignore_index=True)
+    output_df = pd.DataFrame(response_data)
 
-    # Salvataggio in csv
-    final_df.to_csv(os.path.join(save_dir, filename_total), index=False, encoding="utf-8", float_format="%.6f")
+    labels_row = [labels.get(col, col) for col in output_df.columns]
 
-    print(f"\nEstrazione completata. \nDati salvati in {save_dir}/{filename_total}.")
+    multi_index = pd.MultiIndex.from_arrays(
+        [output_df.columns, labels_row],
+        names=["variable", "description"]
+    )
 
-    # Rimuoviamo le simulazini nulle
-    remove_null_simulations(filename_total, filename_clean, save_dir)
+    output_df.columns = multi_index
 
+    print(f"\nEstrazione completata. \n")
+
+    return output_df
