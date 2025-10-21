@@ -271,7 +271,7 @@ def extract_allData (verbose = True, pause = True, save_all_files=False):
 
     mask_fountaining = df_concat_clean_notExpl[("response_fn_19", "Fragmentation length scale [m]")] > 0.1
 
-    df_concat_clean_fount  = df_concat_clean_notExpl[mask_effusive]
+    df_concat_clean_fount  = df_concat_clean_notExpl[mask_fountaining]
 
     suffix = "_notExplosive_fountaining.csv"
 

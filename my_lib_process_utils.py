@@ -619,8 +619,21 @@ def check_files_required():
 
     # --- Controllo mandatory ---
     if not os.path.isfile(os.path.join(cwd, mandatory_file)):
-        print(f"Abort: The file '{mandatory_file}' is not in the folder {cwd}.")
-        sys.exit(1)
+        print(f"⚠️  Warning: The file '{mandatory_file}' is not found.")
+        print("   Manual selection...\n")
+
+        # Apri finestra di dialogo per cercarlo
+        root = tk.Tk()
+        root.withdraw()
+        file_path = filedialog.askopenfilename(
+            title=f"Seleziona il file '{mandatory_file}'",
+            filetypes=[("Input file", "*.in")]
+        )
+
+        if not file_path:
+            print("❌ Nessun file selezionato. Operazione annullata.\n")
+            sys.exit(1)
+        
 
     # --- Controllo altri file ---
     missing = []

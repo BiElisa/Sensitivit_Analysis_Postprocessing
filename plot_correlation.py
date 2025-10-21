@@ -191,7 +191,7 @@ def plot_correlation_lists(
             if not y_label:
                 y_label = df.columns.get_level_values(1)[df.columns.get_level_values(0) == y_col][0]
 
-            ax.plot(x_vals, y_vals, marker, color=color, markersize=2, linestyle="none", label=f"Data {df_name}")
+            ax.plot(x_vals, y_vals, marker, color=color, markersize=2, linestyle="none", label=f"Data {df_name}", alpha=0.6)
 
         # --- Overlay stats se presenti ---
 
