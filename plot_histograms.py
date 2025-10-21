@@ -264,8 +264,6 @@ if __name__ == '__main__':
         save_name="freq_allSim_inputs"
     )
 
-    input('...')
-
     plot_xi_histograms(
         df = {"All simulations":df_concat},
         var_specs = inputs_scaled,
