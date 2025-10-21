@@ -1,5 +1,7 @@
 import os  # standard library to interact with the operative system (paths, directories, etc)
 import re  # standard library for regular expressions
+import tkinter as tk
+from tkinter import filedialog
 import pandas as pd
 import numpy as np
 import sys
@@ -78,15 +80,28 @@ def import_dakota_tabular_new(filename='dakota_tabular.dat'): # forse potrebbe s
         df := pandas.DataFrame: Il DataFrame contenente i dati del file.
     """
     if not os.path.exists(filename):
-        print(f"Errore: Il file '{filename}' non è stato trovato all'interno della cartella corrente.")
-        return None
+        print(f"⚠️  Warning: file '{filename}' non trovato.")
+        print("   Selezionalo manualmente...\n")
+
+        # Apri finestra di dialogo per cercarlo
+        root = tk.Tk()
+        root.withdraw()
+        file_path = filedialog.askopenfilename(
+            title=f"Seleziona il file '{filename}'",
+            filetypes=[("Dakota table", "*.dat")]
+        )
+
+        if not file_path:
+            print("❌ Nessun file selezionato. Operazione annullata.\n")
+            sys.exit(1)
+    else: file_path = filename
     
     # Legge il file, saltando la prima riga di intestazione.
     # Questo approccio è più robusto e garantisce che vengano lette tutte le righe.
-    df = pd.read_csv(filename, sep='\s+', skiprows=1, header=None)
+    df = pd.read_csv(file_path, sep='\s+', skiprows=1, header=None)
 
     # Legge la riga di intestazione separatamente per assegnare i nomi delle colonne
-    with open(filename, 'r') as f:
+    with open(file_path, 'r') as f:
         header_line = f.readline().strip()
 
     # Pulisce la riga di intestazione dai caratteri di commento e la divide
@@ -291,11 +306,25 @@ def import_dakota_bounds():
     
     # Controlla se il file esiste
     if not os.path.isfile(filename):
-        raise FileNotFoundError(f"File '{filename}' non trovato nella directory {os.getcwd()}")
+        print(f"⚠️  Warning: file '{filename}' non trovato.")
+        print("   Selezionalo manualmente...\n")
+
+        # Apri finestra di dialogo per cercarlo
+        root = tk.Tk()
+        root.withdraw()
+        file_path = filedialog.askopenfilename(
+            title=f"Seleziona il file '{filename}'",
+            filetypes=[("Input file", "*.in")]
+        )
+
+        if not file_path:
+            print("❌ Nessun file selezionato. Operazione annullata.\n")
+            sys.exit(1)
+    else: file_path = filename
     
     bounds_data = {}
     
-    with open(filename, "r") as f:
+    with open(file_path, "r") as f:
         for line in f:
             line_stripped = line.strip()
             
@@ -499,19 +528,19 @@ def get_xi_labels_from_template(df, template_file):
                     elif var_name == 'P1_IN':
                         xi_labels[xi] = 'Inlet press. [Pa]'
                     elif var_name == 'BETA_C0':
-                        xi_labels[xi] = 'Phenocryst. content [vol.]'
+                        xi_labels[xi] = 'Phenocryst. content [vol.fract.]'
                     elif var_name == 'X_EX_DIS_IN':
                         if len(matches) == 2:
-                            xi_labels[matches[0]] = 'Inlet H2O content [wt.]'
-                            xi_labels[matches[1]] = 'Inlet CO2 content [wt.]'
+                            xi_labels[matches[0]] = 'Inlet H2O content [wt.fract.]'
+                            xi_labels[matches[1]] = 'Inlet CO2 content [wt.fract.]'
                         elif len(matches) == 1:
-                            xi_labels[xi] = 'Inlet H2O content [wt.]'
+                            xi_labels[xi] = 'Inlet H2O content [wt.fract.]'
                     elif var_name == 'X_TOT_MD_IN':
                         if len(matches) == 2:
-                            xi_labels[matches[0]] = 'Inlet H2O content [wt.]'
-                            xi_labels[matches[1]] = 'Inlet CO2 content [wt.]'
+                            xi_labels[matches[0]] = 'Inlet H2O content [wt.fract.]'
+                            xi_labels[matches[1]] = 'Inlet CO2 content [wt.fract.]'
                         elif len(matches) == 1:
-                            xi_labels[xi] = 'Inlet H2O content [wt.]'
+                            xi_labels[xi] = 'Inlet H2O content [wt.fract.]'
                     else:
                         xi_labels[xi] = var_name
 

@@ -56,13 +56,15 @@ This repository provides tools to:
 
 ## 2. Preparation 
 
-Make sure the working directory contains the following files:  
+Make sure to have access to the following files:  
 
 - `dakota_tabular.dat`  
 - `dakota_test_parallel.in`  
 - `conduit_solver.template`  
 
-Additionally, you need a folder containing all the simulation results from the sensitivity analysis.  
+You can copy or link them into the folder containing the scripts. Anyway, if the scripts do not find them, dialogue windows are opened so the user can select the files by navigating the directories.
+
+Additionally, make sure to have access to a folder containing all the simulation results from the sensitivity analysis.  
 A recommended structure is:  
 
 workdir/
@@ -72,6 +74,8 @@ workdir/
 ├── workdir.2/
 
 ├── ...
+
+And into each folder there must be a `bak` file with the backup of the input data.
 
 
 ## 3. Data Extraction (`extract_allData.py`)
@@ -86,15 +90,15 @@ python extract_allData.py
 
 Optional arguments:
 
---verbose true/false → Enable detailed logging.
+--verbose 0,1,2 → Enable detailed logging.
 
 --pause true/false → Pause execution at key steps.
 
+--save_all_files true/false → Save CSV files intermediate to the extraction procedure
+
 ### Output
 
-The script generates 34 CSV files organized by eruptive style (Explosive, Effusive, Fountaining, etc.) and saves them in the `csv_files/` directory.
-
-Examples:
+The script generates 5 CSV files (plus 5 optional) organized by eruptive style (Explosive, Effusive, Fountaining, etc.) and saves them in the `csv_files/` directory:
 
 `data_allConcat.csv`
 
@@ -106,7 +110,12 @@ Examples:
 
 `data_allConcat_notExplosive_fountaining.csv`
 
-… and others.
+Optionals (saved if `save_all_files=true`):
+  `data_at_fragmentation_total.csv`
+  `data_at_inlet_total.csv`
+  `data_at_vent_total.csv`
+  `data_average_total.csv`
+  `data_allConcat_total.csv`
 
 Each CSV file uses a *two-row header*:
 - **level 0:** technical names (`x1`, `response_fn_12`, …)  
