@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import my_lib_process_utils as utils
+import user_plot_sobol as user_plt
 
 def plot_sobol_indices(
         sobol_indices, 
@@ -192,43 +193,12 @@ if __name__ == '__main__':
 
     #endregion
 
-    save_dir="plot_Sobol"
-
-    # chiavi = response_fn, 
-    # valori = array di indici normalizzati per ciascun xi
-    response_labels_example = {
-        'response_fn_1': 'Gas volume fraction',
-        'response_fn_15': 'Fragmentation depth',
-        'response_fn_12': 'Mass flow rate',
-        'response_fn_4': 'Exit velocity',
-        'response_fn_16': 'Exit crystal content',
-        'response_fn_28': 'Undercooling @Frag'
-    }
-
-    plot_sobol_indices(
-        sobol_indices, 
-        response_labels=response_labels_example, 
-        save_name='sobol_indices',
-        save_dir=save_dir
+    # Importa ed esegue lo script utente
+    user_plt.run_all_plots(
+        plot_sobol_indices=plot_sobol_indices,
+        sobol_indices=sobol_indices
     )
 
-    # chiavi = response_fn, 
-    # valori = array di indici normalizzati per ciascun xi
-    xi_labels = ['Press.','Temp.','Radius','H2O','CO2','Crystals']
-    response_labels_example = {
-        'response_fn_1': 'Gas volume fraction',
-        'response_fn_15': 'Fragmentation depth',
-        'response_fn_12': 'Mass flow rate',
-        'response_fn_4': 'Exit velocity',
-        'response_fn_16': 'Exit crystal content',
-        'response_fn_28': 'Undercooling @Frag',
-        'response_fn_72': 'Avg. viscosity'
-    }
 
-    plot_sobol_indices(
-        sobol_indices, 
-        xi_labels=xi_labels, 
-        response_labels=response_labels_example, 
-        save_name='sobol_indices_xi_Labels',
-        save_dir=save_dir
-    )
+
+   
