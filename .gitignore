@@ -3,5 +3,8 @@ plot_correlations/
 plot_Sobol/
 plot_histograms/
 plot_frequencies/
+conduit_solver.template/
+dakota_tabular.dat/
+dakota_test_parallel.in/
 __pycache__/
 
