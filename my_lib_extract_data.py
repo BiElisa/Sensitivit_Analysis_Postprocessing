@@ -104,6 +104,14 @@ def extract_data_at_frag(main_dir, bak_name, N, save_dir, name_file):
 
         #Chiamo funzione che cerca e legge .std file e .bak file
         std_data, bak_data = utils.search_and_read_std_file( main_dir, bak_name, index_simul)       
+        
+        # EB : DEBUG
+        # I activated this DEBUG to find that some workdir with 10 files instead of 8 or 13
+        if std_data is None:
+            print(" DEBUG: std_data is None!")
+        else:
+            print(f" DEBUG: len(std_data) = {len(std_data)}. Index_simul = {index_simul+1} (of {N})")
+        # EB : DEBUG end
 
         # 3. Elaborazione dei dati se i file sono disponibili
         if (std_data is not None and bak_data is not None):
